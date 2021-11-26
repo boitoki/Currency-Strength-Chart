@@ -38,8 +38,8 @@ string resotype = input.string('auto', 'Resolution', options=['D', 'W', 'M', '12
 string reso = resotype == resotype_lookback ? timeframe.period : resotype == 'auto' ? resotype_autovalue : resotype
 int resotype_lookbackperiod = resotype == resotype_lookback ? input.int(100, 'Lookback Number', minval=1, group=g1, tooltip='When you choose the "Use Lookback Number" on the resolution.') : 1
 string BROKER = input.string(title='Brokers', options=['OANDA', 'FOREXCOM', 'SAXO', 'FX_IDC', 'FX'], defval='OANDA', group=g1)
-int smooth = input.int(1, 'Smoothing', minval=1, group=g1)
-string smoothtype = input.string("SMA", options=['SMA', 'EMA', 'RMA', 'WMA', 'VWMA', 'HMA', 'LSMA', 'ALMA', 'SWMA', 'TMA', 'DEMA', 'TEMA', 'MAV', 'KAMA', 'ZZLEMA', 'AMA'], group=g1)
+int smooth = input.int(defval=1, title='Smoothing', minval=1, group=g1)
+string smoothtype = input.string(defval='SMA', title='Smoothing type', options=['SMA', 'EMA', 'RMA', 'WMA', 'VWMA', 'HMA', 'LSMA', 'ALMA', 'SWMA', 'TMA', 'DEMA', 'TEMA', 'MAV', 'KAMA', 'ZZLEMA', 'AMA'], group=g1)
 
 ////////////////////
 // Switches
@@ -128,8 +128,9 @@ panel_theme = input.string(title='Color theme', defval='multi', options=['multi'
 is_multi = panel_theme == 'multi'
 
 // Currency pair strength
-show_pair = input.bool(title="Currency pair strength", defval=false, group=g9)
-offset = show_pair ? input.int(defval=100, title="Position offset", minval=0, group=g9) : 0
+var bool show_pair = input.bool(title="Currency pair strength", defval=false, group=g9)
+offset = show_pair ? input.int(defval=100, title="Position offset", options=[0,20,40,60,80,100,120,140,160,180,200], group=g9) : 0
+pair_margin = input.int(defval=4, title="Position margin", options=[0,2,4,6,8,10,16,20], group=g9)
 pair_labelcolor = input.color(defval=color.gray, title="Label color", group=g9)
 
 
@@ -477,17 +478,17 @@ delta_positions = array.new_int()
 for i = 0 to 8
     array.push(delta_positions, i * -7)
 
-plot(show_pair ? (array.get(delta_pairs, 0) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, color=colore.gogh_cafeterrace('yellow'), offset=-offset-15)
-plot(show_pair ? (array.get(delta_pairs, 1) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, color=colore.gogh_cafeterrace('yellow'), offset=-offset-15-7*1)
-plot(show_pair ? (array.get(delta_pairs, 2) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, color=colore.gogh_cafeterrace('orange'), offset=-offset-15-7*2)
-plot(show_pair ? (array.get(delta_pairs, 3) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, color=colore.gogh_cafeterrace('orange'), offset=-offset-15-7*3)
-plot(show_pair ? (array.get(delta_pairs, 4) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, color=colore.gogh_cafeterrace('light-blue'), offset=-offset-15-7*4)
-plot(show_pair ? (array.get(delta_pairs, 5) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, color=colore.gogh_cafeterrace('light-blue'), offset=-offset-15-7*5)
-plot(show_pair ? (array.get(delta_pairs, 6) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, color=colore.gogh_cafeterrace('blue'), offset=-offset-15-7*6)
-plot(show_pair ? (array.get(delta_pairs, 7) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, color=colore.gogh_cafeterrace('blue'), offset=-offset-15-7*7)
+plot(show_pair ? (array.get(delta_pairs, 0) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, offset=-(offset+pair_margin)-7*0, editable=false, color=colore.gogh_cafeterrace('yellow'))
+plot(show_pair ? (array.get(delta_pairs, 1) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, offset=-(offset+pair_margin)-7*1, editable=false, color=colore.gogh_cafeterrace('yellow'))
+plot(show_pair ? (array.get(delta_pairs, 2) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, offset=-(offset+pair_margin)-7*2, editable=false, color=colore.gogh_cafeterrace('orange'))
+plot(show_pair ? (array.get(delta_pairs, 3) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, offset=-(offset+pair_margin)-7*3, editable=false, color=colore.gogh_cafeterrace('orange'))
+plot(show_pair ? (array.get(delta_pairs, 4) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, offset=-(offset+pair_margin)-7*4, editable=false, color=colore.gogh_cafeterrace('light-blue'))
+plot(show_pair ? (array.get(delta_pairs, 5) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, offset=-(offset+pair_margin)-7*5, editable=false, color=colore.gogh_cafeterrace('light-blue'))
+plot(show_pair ? (array.get(delta_pairs, 6) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, offset=-(offset+pair_margin)-7*6, editable=false, color=colore.gogh_cafeterrace('blue'))
+plot(show_pair ? (array.get(delta_pairs, 7) / DELTA_MAX) * 80 : na, style=plot.style_histogram, linewidth=12, show_last=1, offset=-(offset+pair_margin)-7*7, editable=false, color=colore.gogh_cafeterrace('blue'))
 
 if (show_pair)
-    x1 = bar_index - (offset + 15)
+    x1 = bar_index - (offset + pair_margin)
     delta_a = label.new(x1 + array.get(delta_positions, 0), 0, get_pair_by_value(array.get(delta_pairs, 0)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
     delta_b = label.new(x1 + array.get(delta_positions, 1), 0, get_pair_by_value(array.get(delta_pairs, 1)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
     delta_c = label.new(x1 + array.get(delta_positions, 2), 0, get_pair_by_value(array.get(delta_pairs, 2)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
@@ -510,6 +511,3 @@ if strongest_value_changed or weakest_value_changed
     alert('NEW UPDATE: ' + alert_message, alert.freq_once_per_bar_close)
 
 alertcondition(ta.cross(DIFF1, DIFF2), 'Histogram crosses', 'Histogram crosses')
-
-
-
