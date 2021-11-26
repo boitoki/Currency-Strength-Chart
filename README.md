@@ -4,3 +4,4 @@
 - Removed 2 currencies difference histogram
 - Removed plotting barcolor
 - Added an option "Auto selected current currencies"
+- Added an option "Resolution"
