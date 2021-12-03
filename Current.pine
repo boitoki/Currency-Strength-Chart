@@ -521,15 +521,7 @@ array.sort(delta_pairs, order.descending)
 DELTA_MAX = array.max(delta_pairs)
 
 get_pair_by_value (_v) =>
-    switch _v
-        DELTA_EURUSD => 'EUR\nUSD'
-        DELTA_USDJPY => 'USD\nJPY'
-        DELTA_USDCHF => 'USD\nCHF'
-        DELTA_GBPUSD => 'GBP\nUSD'
-        DELTA_AUDUSD => 'AUD\nUSD'
-        DELTA_USDCAD => 'USD\nCAD'
-        DELTA_NZDUSD => 'NZD\nUSD'
-        DELTA_GBPJPY => 'GBP\nJPY'
+    _v == DELTA_EURUSD ? 'EUR\nUSD' : _v == DELTA_USDJPY ? 'USD\nJPY' : _v == DELTA_USDCHF ? 'USD\nCHF' : _v == DELTA_GBPUSD ? 'GBP\nUSD' : _v == DELTA_AUDUSD ? 'AUD\nUSD' : _v == DELTA_USDCAD ? 'USD\nCAD' : _v == DELTA_NZDUSD ? 'NZD\nUSD' : _v == DELTA_GBPJPY ? 'GBP\nJPY' : na
 
 delta_positions = array.new_int(8)
 
