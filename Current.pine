@@ -38,10 +38,10 @@ NZD_FLAG = '🇳🇿'
 // Inputs
 ////////////////////
 string resotype_autovalue = not timeframe.isintraday ? '12M' : timeframe.multiplier >= 60 ? 'W' : timeframe.multiplier >= 240 ? 'M' : 'D'
-string resotype_customize = 'Use "Resolution"'
-string resotype_lookback = 'Use "Lookback Number"'
+string resotype_customize = 'Resolution'
+string resotype_lookback = 'Lookback periods'
 string resotype_mode = input.string(defval='Auto', title='Mode', options=['Auto', resotype_customize, resotype_lookback], group=g1)
-string resotype = input.timeframe(defval='D', title=' • Resolution', group=g1, tooltip='When you choose the "Use Resolution" on the resolution.')
+string resotype = input.timeframe(defval='D', title=' • Resolution', group=g1, tooltip='When you choose the "Resolution" on the mode.')
 
 get_reso (_mode) => 
     switch _mode
@@ -51,7 +51,7 @@ get_reso (_mode) =>
         => resotype
 
 string reso = get_reso(resotype_mode)
-int resotype_lookbackperiod = resotype_mode == resotype_lookback ? input.int(defval=100, title=' • Lookback Number', minval=1, group=g1, tooltip='When you choose the "Use Lookback Number" on the resolution.') : 1
+int resotype_lookbackperiod = resotype_mode == resotype_lookback ? input.int(defval=100, title=' • Lookback periods', minval=1, group=g1, tooltip='When you choose the "Lookback periods" on the mode.') : 1
 string BROKER = input.string(title='Brokers', options=['OANDA', 'FOREXCOM', 'SAXO', 'FX_IDC', 'FX'], defval='OANDA', group=g1)
 int smooth = input.int(defval=1, title='Smoothing', minval=1, group=g1)
 string smoothtype = input.string(defval='SMA', title='Smoothing type', options=['SMA', 'EMA', 'RMA', 'WMA', 'VWMA', 'HMA', 'LSMA', 'ALMA', 'SWMA', 'TMA', 'DEMA', 'TEMA', 'MAV', 'KAMA', 'ZZLEMA', 'AMA'], group=g1)
@@ -222,6 +222,8 @@ get_color_by_value(v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
 get_flag_by_value(v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
     v == _EUR ? EUR_FLAG : v == _USD ? USD_FLAG : v == _JPY ? JPY_FLAG : v == _CHF ? CHF_FLAG : v == _GBP ? GBP_FLAG : v == _AUD ? AUD_FLAG : v == _CAD ? CAD_FLAG : v == _NZD ? NZD_FLAG : na
 
+get_pair_by_value (_v, _EURUSD, _USDJPY, _USDCHF, _GBPUSD, _AUDUSD , _USDCAD, _NZDUSD, _GBPJPY) =>
+    _v == _EURUSD ? 'EUR\nUSD' : _v == _USDJPY ? 'USD\nJPY' : _v == _USDCHF ? 'USD\nCHF' : _v == _GBPUSD ? 'GBP\nUSD' : _v == _AUDUSD ? 'AUD\nUSD' : _v == _USDCAD ? 'USD\nCAD' : _v == _NZDUSD ? 'NZD\nUSD' : _v == _GBPJPY ? 'GBP\nJPY' : na
 
 get_val(_v1, _v2) =>
     float res = 0
@@ -448,7 +450,9 @@ if show_labels
         label USD_LABEL = label.new(labelX, USD, 'USD', color=c_usd, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
         label.delete(USD_LABEL[1])
 
+////////////////////
 // Analysis
+////////////////////
 values = array.new_float(8)
 array.set(values, 0, EUR)
 array.set(values, 1, USD)
@@ -460,9 +464,11 @@ array.set(values, 6, CAD)
 array.set(values, 7, NZD)
 array.sort(values, order.descending)
 
-sorted_by_ranking_names = array.new_string(0)
+sorted_by_ranking_names = array.new_string(8)
 
+////////////////////
 // Panel
+////////////////////
 [border_color, border_width, frame_color, frame_width, text_color, text_size, bgcolor, head_text_color, head_text_size, head_bgcolor] = mycolor.theme(panel_theme)
 
 var table panel = table.new(panel_position, 4, 8, border_color=border_color, border_width=border_width, frame_color=frame_color, frame_width=frame_width)
@@ -480,7 +486,7 @@ for i = 0 to array.size(values) - 1 by 1
     r = str.tostring(i + 1)
 
     if not na(n)
-        array.push(sorted_by_ranking_names, n)
+        array.set(sorted_by_ranking_names, i, n)
 
     if show_panel
         head_bgcolor := is_multi ? c : head_bgcolor
@@ -490,15 +496,9 @@ for i = 0 to array.size(values) - 1 by 1
         table.cell(panel, 2, i, n, bgcolor=bgcolor, text_color=text_color, text_size=panel_text_size, text_halign=text.align_left)
         table.cell(panel, 3, i, v, bgcolor=bgcolor, text_color=text_color, text_size=panel_text_size, text_halign=text.align_right)
 
-var float max_value = array.max(values)
-var float min_value = array.min(values)
-var string the_strongest_name = get_name_by_value(max_value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
-var string the_weakest_name = get_name_by_value(min_value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
-var bool strongest_value_changed = the_strongest_name != the_strongest_name[1]
-var bool weakest_value_changed = the_weakest_name != the_weakest_name[1]
-var string alert_message = array.join(sorted_by_ranking_names, ' > ')
-
+////////////////////
 // Delta
+////////////////////
 DELTA_EURUSD = math.abs(EUR-USD)
 DELTA_USDJPY = math.abs(USD-JPY)
 DELTA_USDCHF = math.abs(USD-CHF)
@@ -520,14 +520,6 @@ array.set(delta_pairs, 7, DELTA_GBPJPY)
 array.sort(delta_pairs, order.descending)
 DELTA_MAX = array.max(delta_pairs)
 
-get_pair_by_value (_v) =>
-    _v == DELTA_EURUSD ? 'EUR\nUSD' : _v == DELTA_USDJPY ? 'USD\nJPY' : _v == DELTA_USDCHF ? 'USD\nCHF' : _v == DELTA_GBPUSD ? 'GBP\nUSD' : _v == DELTA_AUDUSD ? 'AUD\nUSD' : _v == DELTA_USDCAD ? 'USD\nCAD' : _v == DELTA_NZDUSD ? 'NZD\nUSD' : _v == DELTA_GBPJPY ? 'GBP\nJPY' : na
-
-delta_positions = array.new_int(8)
-
-for i = 0 to 7
-    array.set(delta_positions, i, i * -7)
-
 plot(show_pair ? (array.get(delta_pairs, 0)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*0, color=ac.gogh_cafeterrace('yellow'))
 plot(show_pair ? (array.get(delta_pairs, 1)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*1, color=ac.gogh_cafeterrace('yellow'))
 plot(show_pair ? (array.get(delta_pairs, 2)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*2, color=ac.gogh_cafeterrace('orange'))
@@ -538,24 +530,42 @@ plot(show_pair ? (array.get(delta_pairs, 6)) : na, style=plot.style_histogram, l
 plot(show_pair ? (array.get(delta_pairs, 7)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*7, color=ac.gogh_cafeterrace('blue'))
 
 if (show_pair)
-    x1 = bar_index - (offset + pair_margin)
-    delta_a = label.new(x1 + array.get(delta_positions, 0), 0, get_pair_by_value(array.get(delta_pairs, 0)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
-    delta_b = label.new(x1 + array.get(delta_positions, 1), 0, get_pair_by_value(array.get(delta_pairs, 1)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
-    delta_c = label.new(x1 + array.get(delta_positions, 2), 0, get_pair_by_value(array.get(delta_pairs, 2)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
-    delta_d = label.new(x1 + array.get(delta_positions, 3), 0, get_pair_by_value(array.get(delta_pairs, 3)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
-    delta_e = label.new(x1 + array.get(delta_positions, 4), 0, get_pair_by_value(array.get(delta_pairs, 4)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
-    delta_f = label.new(x1 + array.get(delta_positions, 5), 0, get_pair_by_value(array.get(delta_pairs, 5)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
-    delta_g = label.new(x1 + array.get(delta_positions, 6), 0, get_pair_by_value(array.get(delta_pairs, 6)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
-    delta_h = label.new(x1 + array.get(delta_positions, 7), 0, get_pair_by_value(array.get(delta_pairs, 7)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
-    label.delete(delta_a[1])
-    label.delete(delta_b[1])
-    label.delete(delta_c[1])
-    label.delete(delta_d[1])
-    label.delete(delta_e[1])
-    label.delete(delta_f[1])
-    label.delete(delta_g[1])
-    label.delete(delta_h[1])
+    delta_positions = array.new_int(8)
+    delta_labels = array.new_string(8)
+    
+    for i = 0 to 7
+        array.set(delta_positions, i, i * -7)
+        array.set(delta_labels, i, get_pair_by_value(array.get(delta_pairs, i), DELTA_EURUSD, DELTA_USDJPY, DELTA_USDCHF, DELTA_GBPUSD, DELTA_AUDUSD, DELTA_USDCAD, DELTA_NZDUSD, DELTA_GBPJPY))
 
+    x1 = bar_index - (offset + pair_margin)
+    delta_1 = label.new(x1 + array.get(delta_positions, 0), 0, array.get(delta_labels, 0), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_2 = label.new(x1 + array.get(delta_positions, 1), 0, array.get(delta_labels, 1), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_3 = label.new(x1 + array.get(delta_positions, 2), 0, array.get(delta_labels, 2), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_4 = label.new(x1 + array.get(delta_positions, 3), 0, array.get(delta_labels, 3), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_5 = label.new(x1 + array.get(delta_positions, 4), 0, array.get(delta_labels, 4), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_6 = label.new(x1 + array.get(delta_positions, 5), 0, array.get(delta_labels, 5), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_7 = label.new(x1 + array.get(delta_positions, 6), 0, array.get(delta_labels, 6), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_8 = label.new(x1 + array.get(delta_positions, 7), 0, array.get(delta_labels, 7), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    label.delete(delta_1[1])
+    label.delete(delta_2[1])
+    label.delete(delta_3[1])
+    label.delete(delta_4[1])
+    label.delete(delta_5[1])
+    label.delete(delta_6[1])
+    label.delete(delta_7[1])
+    label.delete(delta_8[1])
+
+////////////////////
 // Alerts
+////////////////////
+var float max_value = array.max(values)
+var float min_value = array.min(values)
+var string the_strongest_name = get_name_by_value(max_value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+var string the_weakest_name = get_name_by_value(min_value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+var bool strongest_value_changed = the_strongest_name != the_strongest_name[1]
+var bool weakest_value_changed = the_weakest_name != the_weakest_name[1]
+var string alert_message = array.join(sorted_by_ranking_names, ' > ')
+
 if strongest_value_changed or weakest_value_changed
     alert('NEW UPDATE: ' + alert_message, alert.freq_once_per_bar_close)
+
