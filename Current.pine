@@ -35,40 +35,40 @@ NZD_FLAG = '🇳🇿'
 ////////////////////
 // Inputs
 ////////////////////
-string resotype_autovalue = not timeframe.isintraday ? '12M' : timeframe.multiplier >= 60 ? 'W' : timeframe.multiplier >= 240 ? 'M' : 'D'
-string resotype_customize = 'Resolution'
-string resotype_lookback = 'Lookback periods'
-string resotype_mode = input.string(defval='Auto', title='Mode', options=['Auto', resotype_customize, resotype_lookback], group=g1)
-string resotype = input.timeframe(defval='D', title=' • Resolution', group=g1, tooltip='When you choose the "Resolution" on the mode.')
+string reso_autovalue = not timeframe.isintraday ? '12M' : timeframe.multiplier >= 60 ? 'W' : timeframe.multiplier >= 240 ? 'M' : 'D'
+string reso_customize = 'Resolution'
+string reso_lookback = 'Lookback periods'
+string i_reso_mode = input.string(defval='Auto', title='Mode', options=['Auto', reso_customize, reso_lookback], group=g1)
+string i_reso_value = input.timeframe(defval='D', title='Resolution', group=g1, tooltip='When you choose the "Resolution" on the mode.')
 
 get_reso (_mode) => 
     switch _mode
-        'Auto' => resotype_autovalue
-        resotype_lookback => timeframe.period
-        resotype_customize => resotype
-        => resotype
+        'Auto' => reso_autovalue
+        reso_lookback => timeframe.period
+        reso_customize => i_reso_value
+        => i_reso_value
 
-string reso = get_reso(resotype_mode)
-int resotype_lookbackperiod = resotype_mode == resotype_lookback ? input.int(defval=100, title=' • Lookback periods', minval=1, group=g1, tooltip='When you choose the "Lookback periods" on the mode.') : 1
-string BROKER = input.string(title='Brokers', options=['OANDA', 'FOREXCOM', 'SAXO', 'FX_IDC', 'FX'], defval='OANDA', group=g1)
-int smooth = input.int(defval=1, title='Smoothing', minval=1, group=g1)
-string smoothtype = input.string(defval='SMA', title='Smoothing type', options=['SMA', 'EMA', 'RMA', 'WMA', 'VWMA', 'HMA', 'LSMA', 'ALMA', 'SWMA', 'TMA', 'DEMA', 'TEMA', 'MAV', 'KAMA', 'ZZLEMA', 'AMA'], group=g1)
+string reso = get_reso(i_reso_mode)
+i_reso_lookback = i_reso_mode == reso_lookback ? input.int(defval=100, title='Lookback periods', minval=1, group=g1, tooltip='When you choose the "Lookback periods" on the mode.') : 1
+i_broker = input.string(title='Brokers', options=['OANDA', 'FOREXCOM', 'SAXO', 'FX_IDC', 'FX'], defval='OANDA', group=g1)
+i_smooth = input.int(defval=1, title='Smoothing', minval=1, group=g1)
+i_smoothtype = input.string(defval='SMA', title='Smoothing type', options=['SMA', 'EMA', 'RMA', 'WMA', 'VWMA', 'HMA', 'LSMA', 'ALMA', 'SWMA', 'TMA', 'DEMA', 'TEMA', 'MAV', 'KAMA', 'ZZLEMA', 'AMA'], group=g1)
 
 ////////////////////
 // Switches
 ////////////////////
-bool show_EUR = input.bool(title='EUR', defval=true, group=g2)
-bool show_USD = input.bool(title='USD', defval=true, group=g2)
-bool show_JPY = input.bool(title='JPY', defval=true, group=g2)
-bool show_GBP = input.bool(title='GBP', defval=true, group=g2)
-bool show_CHF = input.bool(title='CHF', defval=true, group=g2)
-bool show_AUD = input.bool(title='AUD', defval=true, group=g2)
-bool show_CAD = input.bool(title='CAD', defval=true, group=g2)
-bool show_NZD = input.bool(title='NZD', defval=true, group=g2)
-bool show_XAU = input.bool(title='XAU', defval=false, group=g2)
-bool show_XAG = input.bool(title='XAG', defval=false, group=g2)
-bool show_OIL = input.bool(title='OIL', defval=false, group=g2)
-bool is_autoSelect = input.bool(defval=false, title="Auto selected current currencies", group=g2)
+show_EUR = input.bool(title='EUR', defval=true, group=g2)
+show_USD = input.bool(title='USD', defval=true, group=g2)
+show_JPY = input.bool(title='JPY', defval=true, group=g2)
+show_GBP = input.bool(title='GBP', defval=true, group=g2)
+show_CHF = input.bool(title='CHF', defval=true, group=g2)
+show_AUD = input.bool(title='AUD', defval=true, group=g2)
+show_CAD = input.bool(title='CAD', defval=true, group=g2)
+show_NZD = input.bool(title='NZD', defval=true, group=g2)
+show_XAU = input.bool(title='XAU', defval=false, group=g2)
+show_XAG = input.bool(title='XAG', defval=false, group=g2)
+show_OIL = input.bool(title='OIL', defval=false, group=g2)
+is_autoSelect = input.bool(defval=false, title="Auto selected current currencies", group=g2)
 bool show_fill = is_autoSelect
 
 if is_autoSelect
@@ -100,27 +100,27 @@ if (str.length(str.replace_all(syminfo.ticker, 'XAG', '')) < 6)
 if (str.length(str.replace_all(syminfo.ticker, 'OIL', '')) < 6)
     show_OIL := true
 
-float v1_EURUSD = request.security(BROKER + ':EURUSD', timeframe.period, close)
-float v1_USDJPY = request.security(BROKER + ':USDJPY', timeframe.period, close)
-float v1_USDCHF = request.security(BROKER + ':USDCHF', timeframe.period, close)
-float v1_GBPUSD = request.security(BROKER + ':GBPUSD', timeframe.period, close)
-float v1_AUDUSD = request.security(BROKER + ':AUDUSD', timeframe.period, close)
-float v1_USDCAD = request.security(BROKER + ':USDCAD', timeframe.period, close)
-float v1_NZDUSD = request.security(BROKER + ':NZDUSD', timeframe.period, close)
-float v1_XAUUSD = show_XAU ? request.security(BROKER + ':XAUUSD', timeframe.period, close) : 0
-float v1_XAGUSD = show_XAG ? request.security(BROKER + ':XAGUSD', timeframe.period, close) : 0
+float v1_EURUSD = request.security(i_broker + ':EURUSD', timeframe.period, close)
+float v1_USDJPY = request.security(i_broker + ':USDJPY', timeframe.period, close)
+float v1_USDCHF = request.security(i_broker + ':USDCHF', timeframe.period, close)
+float v1_GBPUSD = request.security(i_broker + ':GBPUSD', timeframe.period, close)
+float v1_AUDUSD = request.security(i_broker + ':AUDUSD', timeframe.period, close)
+float v1_USDCAD = request.security(i_broker + ':USDCAD', timeframe.period, close)
+float v1_NZDUSD = request.security(i_broker + ':NZDUSD', timeframe.period, close)
+float v1_XAUUSD = show_XAU ? request.security(i_broker + ':XAUUSD', timeframe.period, close) : 0
+float v1_XAGUSD = show_XAG ? request.security(i_broker + ':XAGUSD', timeframe.period, close) : 0
 float v1_OILUSD = show_OIL ? request.security('USOIL', timeframe.period, close) : 0
 
-float v2_EURUSD = request.security(BROKER + ':EURUSD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
-float v2_USDJPY = request.security(BROKER + ':USDJPY', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
-float v2_USDCHF = request.security(BROKER + ':USDCHF', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
-float v2_GBPUSD = request.security(BROKER + ':GBPUSD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
-float v2_AUDUSD = request.security(BROKER + ':AUDUSD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
-float v2_USDCAD = request.security(BROKER + ':USDCAD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
-float v2_NZDUSD = request.security(BROKER + ':NZDUSD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
-float v2_XAUUSD = show_XAU ? request.security(BROKER + ':XAUUSD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on) : 0
-float v2_XAGUSD = show_XAU ? request.security(BROKER + ':XAGUSD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on) : 0
-float v2_OILUSD = show_OIL ? request.security('USOIL', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on) : 0
+float v2_EURUSD = request.security(i_broker + ':EURUSD', reso, close[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_USDJPY = request.security(i_broker + ':USDJPY', reso, close[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_USDCHF = request.security(i_broker + ':USDCHF', reso, close[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_GBPUSD = request.security(i_broker + ':GBPUSD', reso, close[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_AUDUSD = request.security(i_broker + ':AUDUSD', reso, close[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_USDCAD = request.security(i_broker + ':USDCAD', reso, close[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_NZDUSD = request.security(i_broker + ':NZDUSD', reso, close[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_XAUUSD = show_XAU ? request.security(i_broker + ':XAUUSD', reso, close[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : 0
+float v2_XAGUSD = show_XAU ? request.security(i_broker + ':XAGUSD', reso, close[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : 0
+float v2_OILUSD = show_OIL ? request.security('USOIL', reso, close[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : 0
 
 // Colors
 c_eur = input.color(title='EUR', defval=color.red, group=g3)
@@ -134,14 +134,14 @@ c_nzd = input.color(title='NZD', defval=color.fuchsia, group=g3)
 c_xau = input.color(title='XAU', defval=#D7BE69, group=g3)
 c_xag = input.color(title='XAG', defval=color.silver, group=g3)
 c_oil = input.color(title='OIL', defval=#745433, group=g3)
-c_green = ac.tradingview('green')
-c_red = ac.tradingview('red')
-c_black = ac.tradingview('black')
-color_theme = input.string(title="Color theme", defval="monokai", options=["monokai", "monokai pro", "customize"], group=g3)
-is_monokai = (color_theme == 'monokai' or color_theme == 'monokai pro')
+color c_green = ac.tradingview('green')
+color c_red = ac.tradingview('red')
+color c_black = ac.tradingview('black')
+i_theme = input.string(title="Color theme", defval="monokai", options=["monokai", "monokai pro", "customize"], group=g3)
+is_monokai = (i_theme == 'monokai' or i_theme == 'monokai pro')
 
 // Color themes
-if color_theme == "monokai"
+if i_theme == "monokai"
     c_eur := mycolor.monokai('pink')
     c_usd := mycolor.monokai('orange')
     c_gbp := mycolor.monokai('green')
@@ -151,7 +151,7 @@ if color_theme == "monokai"
     c_green := mycolor.monokai('green')
     c_red := mycolor.monokai('pink')
     c_black := mycolor.monokai('black')
-else if color_theme == "monokai pro"
+else if i_theme == "monokai pro"
     c_eur := mycolor.monokaipro('pink')
     c_usd := mycolor.monokaipro('orange')
     c_gbp := mycolor.monokaipro('green')
@@ -178,6 +178,7 @@ label_size = input.string(title='Label size', options=[size.auto, size.tiny, siz
 label_offset = input.int(title='Label offset', defval=5, minval=0, group=g8)
 label_style = label.style_label_left
 label_x = time + timeframe.multiplier * 60 * 1000 * label_offset
+
 line_x2 = is_line_extend ? time + 1000 : label_x
 
 // Panel
@@ -196,7 +197,8 @@ pair_labelcolor = input.color(defval=color.gray, title="Label color", group=g9)
 
 // Options
 show_levels = input.bool(title='Level lines', defval=false, group=g6)
-levels = input.int(title='Level (±)', minval=1, defval=10, group=g6)
+i_levels = input.int(title='Level (±)', minval=1, defval=10, group=g6)
+color c_levels = show_levels ? color.gray : na
 
 
 ////////////////////
@@ -319,26 +321,24 @@ float OILAUD = get_val_d(v1_OILUSD, v2_OILUSD, v1_AUDUSD, v2_AUDUSD)
 float OILNZD = get_val_d(v1_OILUSD, v2_OILUSD, v1_NZDUSD, v2_NZDUSD)
 float OILXAU = get_val_d(v1_OILUSD, v2_OILUSD, v1_XAUUSD, v2_XAUUSD)
 
-float EUR = ma_function(smoothtype, ( EURUSD + EURJPY + EURCHF + EURGBP + EURAUD + EURCAD + EURNZD) / 7, smooth)
-float USD = ma_function(smoothtype, (-EURUSD + USDJPY + USDCHF - GBPUSD - AUDUSD + USDCAD - NZDUSD) / 7, smooth)
-float JPY = ma_function(smoothtype, (-EURJPY - USDJPY - CHFJPY - GBPJPY - AUDJPY - CADJPY - NZDJPY) / 7, smooth)
-float CHF = ma_function(smoothtype, (-EURCHF - USDCHF + CHFJPY - GBPCHF - AUDCHF - CADCHF - NZDCHF) / 7, smooth)
-float GBP = ma_function(smoothtype, (-EURGBP + GBPUSD + GBPCHF + GBPJPY + GBPAUD + GBPCAD + GBPNZD) / 7, smooth)
-float AUD = ma_function(smoothtype, (-EURAUD + AUDUSD + AUDJPY + AUDCHF - GBPAUD + AUDCAD + AUDNZD) / 7, smooth)
-float CAD = ma_function(smoothtype, (-EURCAD - USDCAD + CADJPY + CADCHF - GBPCAD - AUDCAD - NZDCAD) / 7, smooth)
-float NZD = ma_function(smoothtype, (-EURNZD + NZDUSD + NZDJPY + NZDCHF - GBPNZD + NZDCAD - AUDNZD) / 7, smooth)
-float XAU = ma_function(smoothtype, (-EURXAU + XAUUSD + XAUJPY + XAUCHF + XAUGBP + XAUAUD + XAUCAD + XAUNZD) / 8, smooth)
-float XAG = ma_function(smoothtype, (-EURXAG + XAGUSD + XAGJPY + XAGCHF + XAGGBP + XAGAUD + XAGCAD + XAGNZD) / 8, smooth)
-float OIL = ma_function(smoothtype, (-EUROIL + OILUSD + OILJPY + OILCHF + OILGBP + OILAUD + OILCAD + OILNZD) / 8, smooth)
-
-color c_levels = show_levels ? color.gray : na
+float EUR = ma_function(i_smoothtype, ( EURUSD + EURJPY + EURCHF + EURGBP + EURAUD + EURCAD + EURNZD) / 7, i_smooth)
+float USD = ma_function(i_smoothtype, (-EURUSD + USDJPY + USDCHF - GBPUSD - AUDUSD + USDCAD - NZDUSD) / 7, i_smooth)
+float JPY = ma_function(i_smoothtype, (-EURJPY - USDJPY - CHFJPY - GBPJPY - AUDJPY - CADJPY - NZDJPY) / 7, i_smooth)
+float CHF = ma_function(i_smoothtype, (-EURCHF - USDCHF + CHFJPY - GBPCHF - AUDCHF - CADCHF - NZDCHF) / 7, i_smooth)
+float GBP = ma_function(i_smoothtype, (-EURGBP + GBPUSD + GBPCHF + GBPJPY + GBPAUD + GBPCAD + GBPNZD) / 7, i_smooth)
+float AUD = ma_function(i_smoothtype, (-EURAUD + AUDUSD + AUDJPY + AUDCHF - GBPAUD + AUDCAD + AUDNZD) / 7, i_smooth)
+float CAD = ma_function(i_smoothtype, (-EURCAD - USDCAD + CADJPY + CADCHF - GBPCAD - AUDCAD - NZDCAD) / 7, i_smooth)
+float NZD = ma_function(i_smoothtype, (-EURNZD + NZDUSD + NZDJPY + NZDCHF - GBPNZD + NZDCAD - AUDNZD) / 7, i_smooth)
+float XAU = ma_function(i_smoothtype, (-EURXAU + XAUUSD + XAUJPY + XAUCHF + XAUGBP + XAUAUD + XAUCAD + XAUNZD) / 8, i_smooth)
+float XAG = ma_function(i_smoothtype, (-EURXAG + XAGUSD + XAGJPY + XAGCHF + XAGGBP + XAGAUD + XAGCAD + XAGNZD) / 8, i_smooth)
+float OIL = ma_function(i_smoothtype, (-EUROIL + OILUSD + OILJPY + OILCHF + OILGBP + OILAUD + OILCAD + OILNZD) / 8, i_smooth)
 
 ////////////////////
 // Plotting
 ////////////////////
 hline(0, title='Base', linestyle=hline.style_solid)
-hline( levels, color=c_levels, title='Level +', linestyle=hline.style_dotted)
-hline(-levels, color=c_levels, title='Level -', linestyle=hline.style_dotted)
+hline( i_levels, color=c_levels, title='Level +', linestyle=hline.style_dotted)
+hline(-i_levels, color=c_levels, title='Level -', linestyle=hline.style_dotted)
 
 // Lines
 plot(show_OIL ? OIL : na, title='OIL', color=c_oil, linewidth=line_width, editable=false, show_last=pair_offset)
