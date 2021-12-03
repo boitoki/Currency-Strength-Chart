@@ -132,22 +132,22 @@ float v2_XAGUSD = show_XAU ? request.security(BROKER + ':XAGUSD', reso, close[re
 float v2_OILUSD = show_OIL ? request.security('USOIL', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on) : 0
 
 // Colors
-var c_eur = input.color(title='EUR', defval=color.red, group=g3)
-var c_usd = input.color(title='USD', defval=color.orange, group=g3)
-var c_jpy = input.color(title='JPY', defval=color.aqua, group=g3)
-var c_gbp = input.color(title='GBP', defval=color.green, group=g3)
-var c_chf = input.color(title='CHF', defval=color.maroon, group=g3)
-var c_aud = input.color(title='AUD', defval=color.blue, group=g3)
-var c_cad = input.color(title='CAD', defval=color.purple, group=g3)
-var c_nzd = input.color(title='NZD', defval=color.fuchsia, group=g3)
-var c_xau = input.color(title='XAU', defval=#D7BE69, group=g3)
-var c_xag = input.color(title='XAG', defval=color.silver, group=g3)
-var c_oil = input.color(title='OIL', defval=#745433, group=g3)
-var c_green = ac.tradingview('green')
-var c_red = ac.tradingview('red')
-var c_black = ac.tradingview('black')
-var color_theme = input.string(title="Color theme", defval="monokai", options=["monokai", "monokai pro", "customize"], group=g3)
-var is_monokai = (color_theme == 'monokai' or color_theme == 'monokai pro')
+c_eur = input.color(title='EUR', defval=color.red, group=g3)
+c_usd = input.color(title='USD', defval=color.orange, group=g3)
+c_jpy = input.color(title='JPY', defval=color.aqua, group=g3)
+c_gbp = input.color(title='GBP', defval=color.green, group=g3)
+c_chf = input.color(title='CHF', defval=color.maroon, group=g3)
+c_aud = input.color(title='AUD', defval=color.blue, group=g3)
+c_cad = input.color(title='CAD', defval=color.purple, group=g3)
+c_nzd = input.color(title='NZD', defval=color.fuchsia, group=g3)
+c_xau = input.color(title='XAU', defval=#D7BE69, group=g3)
+c_xag = input.color(title='XAG', defval=color.silver, group=g3)
+c_oil = input.color(title='OIL', defval=#745433, group=g3)
+c_green = ac.tradingview('green')
+c_red = ac.tradingview('red')
+c_black = ac.tradingview('black')
+color_theme = input.string(title="Color theme", defval="monokai", options=["monokai", "monokai pro", "customize"], group=g3)
+is_monokai = (color_theme == 'monokai' or color_theme == 'monokai pro')
 
 // Color themes
 if color_theme == "monokai"
@@ -210,7 +210,7 @@ levels = input.int(title='Level (±)', minval=1, defval=10, group=g6)
 ////////////////////
 // Currency mames
 ////////////////////
-var currency_names = array.new_string(8)
+currency_names = array.new_string(8)
 array.set(currency_names, i_EUR, 'EUR')
 array.set(currency_names, i_USD, 'USD')
 array.set(currency_names, i_JPY, 'JPY')
@@ -223,7 +223,7 @@ array.set(currency_names, i_NZD, 'NZD')
 ////////////////////
 // Currency colors
 ////////////////////
-var currency_colors = array.new_color(8)
+currency_colors = array.new_color(8)
 array.set(currency_colors, i_EUR, c_eur)
 array.set(currency_colors, i_USD, c_usd)
 array.set(currency_colors, i_JPY, c_jpy)
@@ -236,7 +236,7 @@ array.set(currency_colors, i_NZD, c_nzd)
 ////////////////////
 // Currency flags
 ////////////////////
-var currency_flags = array.new_string(8)
+currency_flags = array.new_string(8)
 array.set(currency_flags, i_EUR, EUR_FLAG)
 array.set(currency_flags, i_USD, USD_FLAG)
 array.set(currency_flags, i_JPY, JPY_FLAG)
@@ -498,7 +498,7 @@ if show_labels
         label.delete(USD_LABEL[1])
 
 // Analysis
-var values = array.new_float(8)
+values = array.new_float(8)
 array.set(values, 0, EUR)
 array.set(values, 1, USD)
 array.set(values, 2, JPY)
@@ -557,7 +557,7 @@ DELTA_USDCAD = math.abs(USD-CAD)
 DELTA_NZDUSD = math.abs(NZD-USD)
 DELTA_GBPJPY = math.abs(GBP-JPY)
 
-var delta_pairs = array.new_float(8)
+delta_pairs = array.new_float(8)
 array.set(delta_pairs, 0, DELTA_EURUSD)
 array.set(delta_pairs, 1, DELTA_USDJPY)
 array.set(delta_pairs, 2, DELTA_USDCHF)
@@ -580,10 +580,10 @@ get_pair_by_value (_v) =>
         DELTA_NZDUSD => 'NZD\nUSD'
         DELTA_GBPJPY => 'GBP\nJPY'
 
-delta_positions = array.new_int()
+delta_positions = array.new_int(8)
 
 for i = 0 to 8
-    array.push(delta_positions, i * -7)
+    array.set(delta_positions, i, i * -7)
 
 plot(show_pair ? (array.get(delta_pairs, 0)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*0, color=ac.gogh_cafeterrace('yellow'))
 plot(show_pair ? (array.get(delta_pairs, 1)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*1, color=ac.gogh_cafeterrace('yellow'))
