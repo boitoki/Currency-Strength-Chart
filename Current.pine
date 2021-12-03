@@ -59,19 +59,19 @@ string smoothtype = input.string(defval='SMA', title='Smoothing type', options=[
 ////////////////////
 // Switches
 ////////////////////
-var show_EUR = input.bool(title='EUR', defval=true, group=g2)
-var show_USD = input.bool(title='USD', defval=true, group=g2)
-var show_JPY = input.bool(title='JPY', defval=true, group=g2)
-var show_GBP = input.bool(title='GBP', defval=true, group=g2)
-var show_CHF = input.bool(title='CHF', defval=true, group=g2)
-var show_AUD = input.bool(title='AUD', defval=true, group=g2)
-var show_CAD = input.bool(title='CAD', defval=true, group=g2)
-var show_NZD = input.bool(title='NZD', defval=true, group=g2)
-var show_XAU = input.bool(title='XAU', defval=false, group=g2)
-var show_XAG = input.bool(title='XAG', defval=false, group=g2)
-var show_OIL = input.bool(title='OIL', defval=false, group=g2)
-var is_autoSelect = input.bool(defval=false, title="Auto selected current currencies", group=g2)
-var show_fill = is_autoSelect
+bool show_EUR = input.bool(title='EUR', defval=true, group=g2)
+bool show_USD = input.bool(title='USD', defval=true, group=g2)
+bool show_JPY = input.bool(title='JPY', defval=true, group=g2)
+bool show_GBP = input.bool(title='GBP', defval=true, group=g2)
+bool show_CHF = input.bool(title='CHF', defval=true, group=g2)
+bool show_AUD = input.bool(title='AUD', defval=true, group=g2)
+bool show_CAD = input.bool(title='CAD', defval=true, group=g2)
+bool show_NZD = input.bool(title='NZD', defval=true, group=g2)
+bool show_XAU = input.bool(title='XAU', defval=false, group=g2)
+bool show_XAG = input.bool(title='XAG', defval=false, group=g2)
+bool show_OIL = input.bool(title='OIL', defval=false, group=g2)
+bool is_autoSelect = input.bool(defval=false, title="Auto selected current currencies", group=g2)
+bool show_fill = is_autoSelect
 
 if is_autoSelect
     show_EUR := false
