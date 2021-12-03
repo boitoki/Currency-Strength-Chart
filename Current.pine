@@ -1,0 +1,620 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © boitoki
+
+//@version=5
+//@see https://currency-strength.com/
+//@see https://currency-strength.com/about.html
+indicator('Currency Strength Chart', overlay=false, precision=2)
+
+import boitoki/TableColorTheme/1 as mycolor
+import boitoki/AwesomeColor/1 as ac
+import boitoki/ma_function/2 as ma
+
+////////////////////
+// Defines
+////////////////////
+var int i_EUR = 0, var int i_USD = 1, var int i_JPY = 2, var int i_CHF = 3
+var int i_GBP = 4, var int i_AUD = 5, var int i_CAD = 6, var int i_NZD = 7
+noneColor = color.new(color.black, 100)
+g1 = 'General:'
+g2 = 'Display:'
+g3 = 'Colors:'
+g4 = 'Panel:'
+g5 = ''
+g6 = 'Options:'
+g7 = 'Line style:'
+g8 = 'Label style:'
+g9 = 'Currency pair strength:'
+EUR_FLAG = '🇪🇺'
+USD_FLAG = '🇺🇸'
+JPY_FLAG = '🇯🇵'
+CHF_FLAG = '🇨🇭'
+GBP_FLAG = '🇬🇧'
+AUD_FLAG = '🇦🇺'
+CAD_FLAG = '🇨🇦'
+NZD_FLAG = '🇳🇿'
+
+////////////////////
+// Inputs
+////////////////////
+string resotype_autovalue = not timeframe.isintraday ? '12M' : timeframe.multiplier >= 60 ? 'W' : timeframe.multiplier >= 240 ? 'M' : 'D'
+string resotype_customize = 'Use "Resolution"'
+string resotype_lookback = 'Use "Lookback Number"'
+string resotype_mode = input.string(defval='Auto', title='Mode', options=['Auto', resotype_customize, resotype_lookback], group=g1)
+string resotype = input.timeframe(defval='D', title=' • Resolution', group=g1, tooltip='When you choose the "Use Resolution" on the resolution.')
+
+get_reso (_mode) => 
+    switch _mode
+        'Auto' => resotype_autovalue
+        resotype_lookback => timeframe.period
+        resotype_customize => resotype
+        => resotype
+
+string reso = get_reso(resotype_mode)
+int resotype_lookbackperiod = resotype_mode == resotype_lookback ? input.int(defval=100, title=' • Lookback Number', minval=1, group=g1, tooltip='When you choose the "Use Lookback Number" on the resolution.') : 1
+string BROKER = input.string(title='Brokers', options=['OANDA', 'FOREXCOM', 'SAXO', 'FX_IDC', 'FX'], defval='OANDA', group=g1)
+int smooth = input.int(defval=1, title='Smoothing', minval=1, group=g1)
+string smoothtype = input.string(defval='SMA', title='Smoothing type', options=['SMA', 'EMA', 'RMA', 'WMA', 'VWMA', 'HMA', 'LSMA', 'ALMA', 'SWMA', 'TMA', 'DEMA', 'TEMA', 'MAV', 'KAMA', 'ZZLEMA', 'AMA'], group=g1)
+
+////////////////////
+// Switches
+////////////////////
+var show_EUR = input.bool(title='EUR', defval=true, group=g2)
+var show_USD = input.bool(title='USD', defval=true, group=g2)
+var show_JPY = input.bool(title='JPY', defval=true, group=g2)
+var show_GBP = input.bool(title='GBP', defval=true, group=g2)
+var show_CHF = input.bool(title='CHF', defval=true, group=g2)
+var show_AUD = input.bool(title='AUD', defval=true, group=g2)
+var show_CAD = input.bool(title='CAD', defval=true, group=g2)
+var show_NZD = input.bool(title='NZD', defval=true, group=g2)
+var show_XAU = input.bool(title='XAU', defval=false, group=g2)
+var show_XAG = input.bool(title='XAG', defval=false, group=g2)
+var show_OIL = input.bool(title='OIL', defval=false, group=g2)
+var is_autoSelect = input.bool(defval=false, title="Auto selected current currencies", group=g2)
+var show_fill = is_autoSelect
+
+if is_autoSelect
+    show_EUR := false
+    show_USD := false
+    show_JPY := false
+    show_GBP := false
+    show_CHF := false
+    show_AUD := false
+    show_CAD := false
+    show_NZD := false
+    show_XAU := false
+    show_XAG := false
+    show_OIL := false
+
+if (str.length(str.replace_all(syminfo.ticker, 'EUR', '')) < 6)
+    show_EUR := true
+if (str.length(str.replace_all(syminfo.ticker, 'USD', '')) < 6)
+    show_USD := true
+if (str.length(str.replace_all(syminfo.ticker, 'JPY', '')) < 6)
+    show_JPY := true
+if (str.length(str.replace_all(syminfo.ticker, 'GBP', '')) < 6)
+    show_GBP := true
+if (str.length(str.replace_all(syminfo.ticker, 'CHF', '')) < 6)
+    show_CHF := true
+if (str.length(str.replace_all(syminfo.ticker, 'AUD', '')) < 6)
+    show_AUD := true
+if (str.length(str.replace_all(syminfo.ticker, 'CAD', '')) < 6)
+    show_CAD := true
+if (str.length(str.replace_all(syminfo.ticker, 'NZD', '')) < 6)
+    show_NZD := true
+if (str.length(str.replace_all(syminfo.ticker, 'XAU', '')) < 6)
+    show_XAU := true
+if (str.length(str.replace_all(syminfo.ticker, 'XAG', '')) < 6)
+    show_XAG := true
+if (str.length(str.replace_all(syminfo.ticker, 'OIL', '')) < 6)
+    show_OIL := true
+
+float v1_EURUSD = request.security(BROKER + ':EURUSD', timeframe.period, close)
+float v1_USDJPY = request.security(BROKER + ':USDJPY', timeframe.period, close)
+float v1_USDCHF = request.security(BROKER + ':USDCHF', timeframe.period, close)
+float v1_GBPUSD = request.security(BROKER + ':GBPUSD', timeframe.period, close)
+float v1_AUDUSD = request.security(BROKER + ':AUDUSD', timeframe.period, close)
+float v1_USDCAD = request.security(BROKER + ':USDCAD', timeframe.period, close)
+float v1_NZDUSD = request.security(BROKER + ':NZDUSD', timeframe.period, close)
+float v1_XAUUSD = show_XAU ? request.security(BROKER + ':XAUUSD', timeframe.period, close) : 0
+float v1_XAGUSD = show_XAG ? request.security(BROKER + ':XAGUSD', timeframe.period, close) : 0
+float v1_OILUSD = show_OIL ? request.security('USOIL', timeframe.period, close) : 0
+
+float v2_EURUSD = request.security(BROKER + ':EURUSD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_USDJPY = request.security(BROKER + ':USDJPY', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_USDCHF = request.security(BROKER + ':USDCHF', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_GBPUSD = request.security(BROKER + ':GBPUSD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_AUDUSD = request.security(BROKER + ':AUDUSD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_USDCAD = request.security(BROKER + ':USDCAD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_NZDUSD = request.security(BROKER + ':NZDUSD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on)
+float v2_XAUUSD = show_XAU ? request.security(BROKER + ':XAUUSD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on) : 0
+float v2_XAGUSD = show_XAU ? request.security(BROKER + ':XAGUSD', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on) : 0
+float v2_OILUSD = show_OIL ? request.security('USOIL', reso, close[resotype_lookbackperiod], barmerge.gaps_off, barmerge.lookahead_on) : 0
+
+// Colors
+var c_eur = input.color(title='EUR', defval=color.red, group=g3)
+var c_usd = input.color(title='USD', defval=color.orange, group=g3)
+var c_jpy = input.color(title='JPY', defval=color.aqua, group=g3)
+var c_gbp = input.color(title='GBP', defval=color.green, group=g3)
+var c_chf = input.color(title='CHF', defval=color.maroon, group=g3)
+var c_aud = input.color(title='AUD', defval=color.blue, group=g3)
+var c_cad = input.color(title='CAD', defval=color.purple, group=g3)
+var c_nzd = input.color(title='NZD', defval=color.fuchsia, group=g3)
+var c_xau = input.color(title='XAU', defval=#D7BE69, group=g3)
+var c_xag = input.color(title='XAG', defval=color.silver, group=g3)
+var c_oil = input.color(title='OIL', defval=#745433, group=g3)
+var c_green = ac.tradingview('green')
+var c_red = ac.tradingview('red')
+var c_black = ac.tradingview('black')
+var color_theme = input.string(title="Color theme", defval="monokai", options=["monokai", "monokai pro", "customize"], group=g3)
+var is_monokai = (color_theme == 'monokai' or color_theme == 'monokai pro')
+
+// Color themes
+if color_theme == "monokai"
+    c_eur := mycolor.monokai('pink')
+    c_usd := mycolor.monokai('orange')
+    c_gbp := mycolor.monokai('green')
+    c_cad := mycolor.monokai('purple')
+    c_aud := mycolor.monokai('blue')
+    c_chf := mycolor.monokai('yellow')
+    c_green := mycolor.monokai('green')
+    c_red := mycolor.monokai('pink')
+    c_black := mycolor.monokai('black')
+else if color_theme == "monokai pro"
+    c_eur := mycolor.monokaipro('pink')
+    c_usd := mycolor.monokaipro('orange')
+    c_gbp := mycolor.monokaipro('green')
+    c_cad := mycolor.monokaipro('purple')
+    c_aud := mycolor.monokaipro('blue')
+    c_chf := mycolor.monokaipro('yellow')
+    c_green := mycolor.monokaipro('green')
+    c_red := mycolor.monokaipro('pink')
+    c_black := mycolor.monokaipro('black')
+
+////////////////////
+// Other settings
+////////////////////
+// Lines
+show_lines = true
+lineX1 = time
+linewidth = input.int(title='Line width', defval=2, minval=1, group=g7)
+lineStyle = input.string(title='Extended line style', defval=line.style_dotted, options=[line.style_solid, line.style_dotted, line.style_dashed], group=g7)
+isLineExtend = input.string(title='Line extend', defval="No", options=["Yes", "No"], group=g7) == "Yes"
+
+// Labels
+show_labels = input.bool(title='Name label', defval=true, group=g8)
+labelsize = input.string(title='Label size', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], defval=size.normal, group=g8)
+labelOffset = input.int(title='Label offset', defval=5, minval=0, group=g8)
+labelStyle = label.style_label_left
+labelX = time + timeframe.multiplier * 60 * 1000 * labelOffset
+lineX2 = isLineExtend ? time + 1000 : labelX
+
+// Panel
+show_panel = input.bool(title='Panel', defval=true, group=g4)
+panel_position = input.string(title='Position', defval=position.top_right, options=[position.top_right, position.top_center, position.top_left, position.middle_right, position.middle_center, position.middle_left, position.bottom_right, position.bottom_center, position.bottom_left], group=g4)
+panel_flag_size = input.string(title='Flag size', defval=size.large, options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=g4)
+panel_text_size = input.string(title='Text size', defval=size.normal, options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=g4)
+panel_theme = input.string(title='Color theme', defval='multi', options=['multi', 'green', 'blue', 'orange', 'red', 'black', 'white', 'night', 'carbon'], group=g4)
+is_multi = panel_theme == 'multi'
+
+// Currency pair strength
+var show_pair = input.bool(title="Currency pair strength", defval=false, group=g9)
+offset = show_pair ? input.int(defval=100, title="Position offset", options=[0,20,40,60,80,100,120,140,160,180,200], group=g9) : 0
+pair_margin = input.int(defval=4, title="Position margin", options=[0,2,4,6,8,10,16,20], group=g9)
+pair_labelcolor = input.color(defval=color.gray, title="Label color", group=g9)
+
+// Options
+show_levels = input.bool(title='Level lines', defval=false, group=g6)
+levels = input.int(title='Level (±)', minval=1, defval=10, group=g6)
+
+////////////////////
+// Currency mames
+////////////////////
+var currency_names = array.new_string(8)
+array.set(currency_names, i_EUR, 'EUR')
+array.set(currency_names, i_USD, 'USD')
+array.set(currency_names, i_JPY, 'JPY')
+array.set(currency_names, i_GBP, 'GBP')
+array.set(currency_names, i_CHF, 'CHF')
+array.set(currency_names, i_AUD, 'AUD')
+array.set(currency_names, i_CAD, 'CAD')
+array.set(currency_names, i_NZD, 'NZD')
+
+////////////////////
+// Currency colors
+////////////////////
+var currency_colors = array.new_color(8)
+array.set(currency_colors, i_EUR, c_eur)
+array.set(currency_colors, i_USD, c_usd)
+array.set(currency_colors, i_JPY, c_jpy)
+array.set(currency_colors, i_GBP, c_gbp)
+array.set(currency_colors, i_CHF, c_chf)
+array.set(currency_colors, i_AUD, c_aud)
+array.set(currency_colors, i_CAD, c_cad)
+array.set(currency_colors, i_NZD, c_nzd)
+
+////////////////////
+// Currency flags
+////////////////////
+var currency_flags = array.new_string(8)
+array.set(currency_flags, i_EUR, EUR_FLAG)
+array.set(currency_flags, i_USD, USD_FLAG)
+array.set(currency_flags, i_JPY, JPY_FLAG)
+array.set(currency_flags, i_GBP, GBP_FLAG)
+array.set(currency_flags, i_CHF, CHF_FLAG)
+array.set(currency_flags, i_AUD, AUD_FLAG)
+array.set(currency_flags, i_CAD, CAD_FLAG)
+array.set(currency_flags, i_NZD, NZD_FLAG)
+
+
+////////////////////
+// Functions
+////////////////////
+ma_function(type, src, len) => ma.ma_function(type, src, len)
+
+get_any_by_value (_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD, _array)  =>
+    switch _v
+        _EUR => array.get(_array, i_EUR)
+        _USD => array.get(_array, i_USD)
+        _JPY => array.get(_array, i_JPY)
+        _GBP => array.get(_array, i_GBP)
+        _CHF => array.get(_array, i_CHF)
+        _AUD => array.get(_array, i_AUD)
+        _CAD => array.get(_array, i_CAD)
+        _NZD => array.get(_array, i_NZD)
+
+get_name_by_value (_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
+    get_any_by_value(_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD, currency_names)
+
+get_color_by_value (_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
+    get_any_by_value(_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD, currency_colors)
+
+get_flag_by_value (_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
+    get_any_by_value(_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD, currency_flags)
+
+get_val(_v1, _v2) =>
+    float res = 0
+
+    if _v2 == 0
+        res := 0
+        res
+    else
+        res := math.log(_v1 / _v2) * 10000
+        res
+
+    res
+
+get_val_m(_v1, _v2, _v3, _v4) =>
+    float res = 0
+    float v1 = _v1 * _v3
+    float v2 = _v2 * _v4
+
+    if _v2 == 0
+        res := 0
+        res
+    else
+        res := math.log(v1 / v2) * 10000
+        res
+
+    res
+
+get_val_d(_v1, _v2, _v3, _v4) =>
+    float res = 0
+
+    if _v3 == 0 or _v4 == 0
+        res := 0
+        res
+    else
+        float v1 = _v1 / _v3
+        float v2 = _v2 / _v4
+
+        if v2 == 0
+            res := 0
+            res
+        else
+            res := math.log(v1 / v2) * 10000
+            res
+
+    res
+
+
+////////////////////
+// Calculating
+////////////////////
+float EURUSD = get_val(v1_EURUSD, v2_EURUSD)
+float USDJPY = get_val(v1_USDJPY, v2_USDJPY)
+float USDCHF = get_val(v1_USDCHF, v2_USDCHF)
+float GBPUSD = get_val(v1_GBPUSD, v2_GBPUSD)
+float AUDUSD = get_val(v1_AUDUSD, v2_AUDUSD)
+float USDCAD = get_val(v1_USDCAD, v2_USDCAD)
+float NZDUSD = get_val(v1_NZDUSD, v2_NZDUSD)
+float XAUUSD = get_val(v1_XAUUSD, v2_XAUUSD)
+float XAGUSD = get_val(v1_XAGUSD, v2_XAGUSD)
+float OILUSD = get_val(v1_OILUSD, v2_OILUSD)
+float EURJPY = get_val_m(v1_EURUSD, v2_EURUSD, v1_USDJPY, v2_USDJPY)
+float EURCHF = get_val_m(v1_EURUSD, v2_EURUSD, v1_USDCHF, v2_USDCHF)
+float EURGBP = get_val_d(v1_EURUSD, v2_EURUSD, v1_GBPUSD, v2_GBPUSD)
+float EURCAD = get_val_m(v1_EURUSD, v2_EURUSD, v1_USDCAD, v2_USDCAD)
+float EURAUD = get_val_d(v1_EURUSD, v2_EURUSD, v1_AUDUSD, v2_AUDUSD)
+float EURNZD = get_val_d(v1_EURUSD, v2_EURUSD, v1_NZDUSD, v2_NZDUSD)
+float EURXAU = get_val_d(v1_EURUSD, v2_EURUSD, v1_XAUUSD, v2_XAUUSD)
+float EURXAG = get_val_d(v1_EURUSD, v2_EURUSD, v1_XAGUSD, v2_XAGUSD)
+float EUROIL = get_val_d(v1_EURUSD, v2_EURUSD, v1_OILUSD, v2_OILUSD)
+float GBPCHF = get_val_m(v1_GBPUSD, v2_GBPUSD, v1_USDCHF, v2_USDCHF)
+float GBPJPY = get_val_m(v1_GBPUSD, v2_GBPUSD, v1_USDJPY, v2_USDJPY)
+float GBPCAD = get_val_m(v1_GBPUSD, v2_GBPUSD, v1_USDCAD, v2_USDCAD)
+float GBPAUD = get_val_d(v1_GBPUSD, v2_GBPUSD, v1_AUDUSD, v2_AUDUSD)
+float GBPNZD = get_val_d(v1_GBPUSD, v2_GBPUSD, v1_NZDUSD, v2_NZDUSD)
+float AUDCHF = get_val_m(v1_AUDUSD, v2_AUDUSD, v1_USDCHF, v2_USDCHF)
+float AUDJPY = get_val_m(v1_AUDUSD, v2_AUDUSD, v1_USDJPY, v2_USDJPY)
+float AUDCAD = get_val_m(v1_AUDUSD, v2_AUDUSD, v1_USDCAD, v2_USDCAD)
+float AUDNZD = get_val_d(v1_AUDUSD, v2_AUDUSD, v1_NZDUSD, v2_NZDUSD)
+float NZDCAD = get_val_m(v1_NZDUSD, v2_NZDUSD, v1_USDCAD, v2_USDCAD)
+float NZDCHF = get_val_m(v1_NZDUSD, v2_NZDUSD, v1_USDCHF, v2_USDCHF)
+float NZDJPY = get_val_m(v1_NZDUSD, v2_NZDUSD, v1_USDJPY, v2_USDJPY)
+float CADJPY = get_val_d(v1_USDJPY, v2_USDJPY, v1_USDCAD, v2_USDCAD)
+float CADCHF = get_val_d(v1_USDCHF, v2_USDCHF, v1_USDCAD, v2_USDCAD)
+float CHFJPY = get_val_d(v1_USDJPY, v2_USDJPY, v1_USDCHF, v2_USDCHF)
+float XAUJPY = get_val_m(v1_XAUUSD, v2_XAUUSD, v1_USDJPY, v2_USDJPY)
+float XAUCHF = get_val_m(v1_XAUUSD, v2_XAUUSD, v1_USDCHF, v2_USDCHF)
+float XAUGBP = get_val_d(v1_XAUUSD, v2_XAUUSD, v1_GBPUSD, v2_GBPUSD)
+float XAUCAD = get_val_m(v1_XAUUSD, v2_XAUUSD, v1_USDCAD, v2_USDCAD)
+float XAUAUD = get_val_d(v1_XAUUSD, v2_XAUUSD, v1_AUDUSD, v2_AUDUSD)
+float XAUNZD = get_val_d(v1_XAUUSD, v2_XAUUSD, v1_NZDUSD, v2_NZDUSD)
+float XAGJPY = get_val_m(v1_XAGUSD, v2_XAGUSD, v1_USDJPY, v2_USDJPY)
+float XAGCHF = get_val_m(v1_XAGUSD, v2_XAGUSD, v1_USDCHF, v2_USDCHF)
+float XAGGBP = get_val_d(v1_XAGUSD, v2_XAGUSD, v1_GBPUSD, v2_GBPUSD)
+float XAGCAD = get_val_m(v1_XAGUSD, v2_XAGUSD, v1_USDCAD, v2_USDCAD)
+float XAGAUD = get_val_d(v1_XAGUSD, v2_XAGUSD, v1_AUDUSD, v2_AUDUSD)
+float XAGNZD = get_val_d(v1_XAGUSD, v2_XAGUSD, v1_NZDUSD, v2_NZDUSD)
+float OILJPY = get_val_m(v1_OILUSD, v2_OILUSD, v1_USDJPY, v2_USDJPY)
+float OILCHF = get_val_m(v1_OILUSD, v2_OILUSD, v1_USDCHF, v2_USDCHF)
+float OILGBP = get_val_d(v1_OILUSD, v2_OILUSD, v1_GBPUSD, v2_GBPUSD)
+float OILCAD = get_val_m(v1_OILUSD, v2_OILUSD, v1_USDCAD, v2_USDCAD)
+float OILAUD = get_val_d(v1_OILUSD, v2_OILUSD, v1_AUDUSD, v2_AUDUSD)
+float OILNZD = get_val_d(v1_OILUSD, v2_OILUSD, v1_NZDUSD, v2_NZDUSD)
+float OILXAU = get_val_d(v1_OILUSD, v2_OILUSD, v1_XAUUSD, v2_XAUUSD)
+
+float EUR = ma_function(smoothtype, ( EURUSD + EURJPY + EURCHF + EURGBP + EURAUD + EURCAD + EURNZD) / 7, smooth)
+float USD = ma_function(smoothtype, (-EURUSD + USDJPY + USDCHF - GBPUSD - AUDUSD + USDCAD - NZDUSD) / 7, smooth)
+float JPY = ma_function(smoothtype, (-EURJPY - USDJPY - CHFJPY - GBPJPY - AUDJPY - CADJPY - NZDJPY) / 7, smooth)
+float CHF = ma_function(smoothtype, (-EURCHF - USDCHF + CHFJPY - GBPCHF - AUDCHF - CADCHF - NZDCHF) / 7, smooth)
+float GBP = ma_function(smoothtype, (-EURGBP + GBPUSD + GBPCHF + GBPJPY + GBPAUD + GBPCAD + GBPNZD) / 7, smooth)
+float AUD = ma_function(smoothtype, (-EURAUD + AUDUSD + AUDJPY + AUDCHF - GBPAUD + AUDCAD + AUDNZD) / 7, smooth)
+float CAD = ma_function(smoothtype, (-EURCAD - USDCAD + CADJPY + CADCHF - GBPCAD - AUDCAD - NZDCAD) / 7, smooth)
+float NZD = ma_function(smoothtype, (-EURNZD + NZDUSD + NZDJPY + NZDCHF - GBPNZD + NZDCAD - AUDNZD) / 7, smooth)
+float XAU = ma_function(smoothtype, (-EURXAU + XAUUSD + XAUJPY + XAUCHF + XAUGBP + XAUAUD + XAUCAD + XAUNZD) / 8, smooth)
+float XAG = ma_function(smoothtype, (-EURXAG + XAGUSD + XAGJPY + XAGCHF + XAGGBP + XAGAUD + XAGCAD + XAGNZD) / 8, smooth)
+float OIL = ma_function(smoothtype, (-EUROIL + OILUSD + OILJPY + OILCHF + OILGBP + OILAUD + OILCAD + OILNZD) / 8, smooth)
+
+color c_levels = show_levels ? color.gray : na
+
+////////////////////
+// Plotting
+////////////////////
+hline(0, title='Base', linestyle=hline.style_solid)
+hline( levels, color=c_levels, title='Level +', linestyle=hline.style_dotted)
+hline(-levels, color=c_levels, title='Level -', linestyle=hline.style_dotted)
+
+// Lines
+plot(show_OIL ? OIL : na, title='OIL', color=c_oil, linewidth=linewidth, editable=false, show_last=offset)
+plot(show_XAG ? XAG : na, title='XAG', color=c_xag, linewidth=linewidth, editable=false, show_last=offset)
+plot(show_XAU ? XAU : na, title='XAU', color=c_xau, linewidth=linewidth, editable=false, show_last=offset)
+plot(show_NZD ? NZD : na, title='NZD', color=c_nzd, linewidth=linewidth, editable=false, show_last=offset)
+plot(show_CAD ? CAD : na, title='CAD', color=c_cad, linewidth=linewidth, editable=false, show_last=offset)
+plot(show_CHF ? CHF : na, title='CHF', color=c_chf, linewidth=linewidth, editable=false, show_last=offset)
+plot(show_AUD ? AUD : na, title='AUD', color=c_aud, linewidth=linewidth, editable=false, show_last=offset)
+plot(show_GBP ? GBP : na, title='GBP', color=c_gbp, linewidth=linewidth, editable=false, show_last=offset)
+plot(show_JPY ? JPY : na, title='JPY', color=c_jpy, linewidth=linewidth, editable=false, show_last=offset)
+plot(show_EUR ? EUR : na, title='EUR', color=c_eur, linewidth=linewidth, editable=false, show_last=offset)
+plot(show_USD ? USD : na, title='USD', color=c_usd, linewidth=linewidth, editable=false, show_last=offset)
+
+plot(show_OIL and show_fill ? OIL : na, title='OIL', color=color.new(c_oil, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
+plot(show_XAG and show_fill ? XAG : na, title='XAG', color=color.new(c_xag, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
+plot(show_XAU and show_fill ? XAU : na, title='XAU', color=color.new(c_xau, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
+plot(show_NZD and show_fill ? NZD : na, title='NZD', color=color.new(c_nzd, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
+plot(show_CAD and show_fill ? CAD : na, title='CAD', color=color.new(c_cad, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
+plot(show_CHF and show_fill ? CHF : na, title='CHF', color=color.new(c_chf, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
+plot(show_AUD and show_fill ? AUD : na, title='AUD', color=color.new(c_aud, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
+plot(show_GBP and show_fill ? GBP : na, title='GBP', color=color.new(c_gbp, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
+plot(show_JPY and show_fill ? JPY : na, title='JPY', color=color.new(c_jpy, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
+plot(show_EUR and show_fill ? EUR : na, title='EUR', color=color.new(c_eur, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
+plot(show_USD and show_fill ? USD : na, title='USD', color=color.new(c_usd, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
+
+if show_lines
+    lineExtend = isLineExtend ? extend.right : extend.none
+
+    if show_OIL
+        OIL_LINE = line.new(lineX1, OIL, lineX2, OIL, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_oil)
+        line.delete(OIL_LINE[1])
+    if show_XAG
+        XAG_LINE = line.new(lineX1, XAG, lineX2, XAG, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_xag)
+        line.delete(XAG_LINE[1])
+    if show_XAU
+        XAU_LINE = line.new(lineX1, XAU, lineX2, XAU, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_xau)
+        line.delete(XAU_LINE[1])
+    if show_NZD
+        NZD_LINE = line.new(lineX1, NZD, lineX2, NZD, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_nzd)
+        line.delete(NZD_LINE[1])
+    if show_CAD
+        CAD_LINE = line.new(lineX1, CAD, lineX2, CAD, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_cad)
+        line.delete(CAD_LINE[1])
+    if show_CHF
+        CHF_LINE = line.new(lineX1, CHF, lineX2, CHF, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_chf)
+        line.delete(CHF_LINE[1])
+    if show_AUD
+        AUD_LINE = line.new(lineX1, AUD, lineX2, AUD, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_aud)
+        line.delete(AUD_LINE[1])
+    if show_GBP
+        GBP_LINE = line.new(lineX1, GBP, lineX2, GBP, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_gbp)
+        line.delete(GBP_LINE[1])
+    if show_JPY
+        JPY_LINE = line.new(lineX1, JPY, lineX2, JPY, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_jpy)
+        line.delete(JPY_LINE[1])
+    if show_EUR
+        EUR_LINE = line.new(lineX1, EUR, lineX2, EUR, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_eur)
+        line.delete(EUR_LINE[1])
+    if show_USD
+        USD_LINE = line.new(lineX1, USD, lineX2, USD, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_usd)
+        line.delete(USD_LINE[1])
+
+
+// Labels
+if show_labels
+    label_text_color = is_monokai ? c_black : color.white
+
+    if show_OIL
+        label OIL_LABEL = label.new(labelX, OIL, 'OIL', color=c_oil, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label.delete(OIL_LABEL[1])
+    if show_XAG
+        label XAG_LABEL = label.new(labelX, XAG, 'XAG', color=c_xag, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label.delete(XAG_LABEL[1])
+    if show_XAU
+        label XAU_LABEL = label.new(labelX, XAU, 'XAU', color=c_xau, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label.delete(XAU_LABEL[1])
+    if show_NZD
+        label NZD_LABEL = label.new(labelX, NZD, 'NZD', color=c_nzd, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label.delete(NZD_LABEL[1])
+    if show_CAD
+        label CAD_LABEL = label.new(labelX, CAD, 'CAD', color=c_cad, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label.delete(CAD_LABEL[1])
+    if show_CHF
+        label CHF_LABEL = label.new(labelX, CHF, 'CHF', color=c_chf, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label.delete(CHF_LABEL[1])
+    if show_AUD
+        label AUD_LABEL = label.new(labelX, AUD, 'AUD', color=c_aud, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label.delete(AUD_LABEL[1])
+    if show_GBP
+        label GBP_LABEL = label.new(labelX, GBP, 'GBP', color=c_gbp, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label.delete(GBP_LABEL[1])
+    if show_JPY
+        label JPY_LABEL = label.new(labelX, JPY, 'JPY', color=c_jpy, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label.delete(JPY_LABEL[1])
+    if show_EUR
+        label EUR_LABEL = label.new(labelX, EUR, 'EUR', color=c_eur, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label.delete(EUR_LABEL[1])
+    if show_USD
+        label USD_LABEL = label.new(labelX, USD, 'USD', color=c_usd, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label.delete(USD_LABEL[1])
+
+// Analysis
+var values = array.new_float(8)
+array.set(values, 0, EUR)
+array.set(values, 1, USD)
+array.set(values, 2, JPY)
+array.set(values, 3, CHF)
+array.set(values, 4, GBP)
+array.set(values, 5, AUD)
+array.set(values, 6, CAD)
+array.set(values, 7, NZD)
+array.sort(values, order.descending)
+
+sorted_by_ranking_names = array.new_string(0)
+
+// Panel
+[border_color, border_width, frame_color, frame_width, text_color, text_size, bgcolor, head_text_color, head_text_size, head_bgcolor] = mycolor.theme(panel_theme)
+
+var table panel = table.new(panel_position, 4, 8, border_color=border_color, border_width=border_width, frame_color=frame_color, frame_width=frame_width)
+
+if is_multi and is_monokai
+    text_color := c_black
+    head_text_color := c_black
+
+for i = 0 to array.size(values) - 1 by 1
+    value = array.get(values, i)
+    n = get_name_by_value(value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+    f = get_flag_by_value(value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+    c = get_color_by_value(value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+    v = str.format('{0, number, #.#}', value)
+    r = str.tostring(i + 1)
+
+    if not na(n)
+        array.push(sorted_by_ranking_names, n)
+
+    if show_panel
+        head_bgcolor := is_multi ? c : head_bgcolor
+        bgcolor      := is_multi ? c : bgcolor
+        table.cell(panel, 0, i, r, bgcolor=head_bgcolor, text_color=head_text_color, text_size=panel_text_size)
+        table.cell(panel, 1, i, f, bgcolor=bgcolor, text_color=text_color, text_size=panel_flag_size)
+        table.cell(panel, 2, i, n, bgcolor=bgcolor, text_color=text_color, text_size=panel_text_size, text_halign=text.align_left)
+        table.cell(panel, 3, i, v, bgcolor=bgcolor, text_color=text_color, text_size=panel_text_size, text_halign=text.align_right)
+
+var float max_value = array.max(values)
+var float min_value = array.min(values)
+var string the_strongest_name = get_name_by_value(max_value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+var string the_weakest_name = get_name_by_value(min_value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+var bool strongest_value_changed = the_strongest_name != the_strongest_name[1]
+var bool weakest_value_changed = the_weakest_name != the_weakest_name[1]
+var string alert_message = array.join(sorted_by_ranking_names, ' > ')
+
+// Delta
+DELTA_EURUSD = math.abs(EUR-USD)
+DELTA_USDJPY = math.abs(USD-JPY)
+DELTA_USDCHF = math.abs(USD-CHF)
+DELTA_GBPUSD = math.abs(GBP-USD)
+DELTA_AUDUSD = math.abs(AUD-USD)
+DELTA_USDCAD = math.abs(USD-CAD)
+DELTA_NZDUSD = math.abs(NZD-USD)
+DELTA_GBPJPY = math.abs(GBP-JPY)
+
+var delta_pairs = array.new_float(8)
+array.set(delta_pairs, 0, DELTA_EURUSD)
+array.set(delta_pairs, 1, DELTA_USDJPY)
+array.set(delta_pairs, 2, DELTA_USDCHF)
+array.set(delta_pairs, 3, DELTA_GBPUSD)
+array.set(delta_pairs, 4, DELTA_AUDUSD)
+array.set(delta_pairs, 5, DELTA_USDCAD)
+array.set(delta_pairs, 6, DELTA_NZDUSD)
+array.set(delta_pairs, 7, DELTA_GBPJPY)
+array.sort(delta_pairs, order.descending)
+DELTA_MAX = array.max(delta_pairs)
+
+get_pair_by_value (_v) =>
+    switch _v
+        DELTA_EURUSD => 'EUR\nUSD'
+        DELTA_USDJPY => 'USD\nJPY'
+        DELTA_USDCHF => 'USD\nCHF'
+        DELTA_GBPUSD => 'GBP\nUSD'
+        DELTA_AUDUSD => 'AUD\nUSD'
+        DELTA_USDCAD => 'USD\nCAD'
+        DELTA_NZDUSD => 'NZD\nUSD'
+        DELTA_GBPJPY => 'GBP\nJPY'
+
+delta_positions = array.new_int()
+
+for i = 0 to 8
+    array.push(delta_positions, i * -7)
+
+plot(show_pair ? (array.get(delta_pairs, 0)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*0, color=ac.gogh_cafeterrace('yellow'))
+plot(show_pair ? (array.get(delta_pairs, 1)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*1, color=ac.gogh_cafeterrace('yellow'))
+plot(show_pair ? (array.get(delta_pairs, 2)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*2, color=ac.gogh_cafeterrace('orange'))
+plot(show_pair ? (array.get(delta_pairs, 3)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*3, color=ac.gogh_cafeterrace('orange'))
+plot(show_pair ? (array.get(delta_pairs, 4)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*4, color=ac.gogh_cafeterrace('light-blue'))
+plot(show_pair ? (array.get(delta_pairs, 5)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*5, color=ac.gogh_cafeterrace('light-blue'))
+plot(show_pair ? (array.get(delta_pairs, 6)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*6, color=ac.gogh_cafeterrace('blue'))
+plot(show_pair ? (array.get(delta_pairs, 7)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*7, color=ac.gogh_cafeterrace('blue'))
+
+//bgcolor(show_pair ? color.new(color.gray, 90) : na, offset=-offset, show_last=(7*8+1))
+
+if (show_pair)
+    x1 = bar_index - (offset + pair_margin)
+    delta_a = label.new(x1 + array.get(delta_positions, 0), 0, get_pair_by_value(array.get(delta_pairs, 0)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_b = label.new(x1 + array.get(delta_positions, 1), 0, get_pair_by_value(array.get(delta_pairs, 1)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_c = label.new(x1 + array.get(delta_positions, 2), 0, get_pair_by_value(array.get(delta_pairs, 2)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_d = label.new(x1 + array.get(delta_positions, 3), 0, get_pair_by_value(array.get(delta_pairs, 3)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_e = label.new(x1 + array.get(delta_positions, 4), 0, get_pair_by_value(array.get(delta_pairs, 4)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_f = label.new(x1 + array.get(delta_positions, 5), 0, get_pair_by_value(array.get(delta_pairs, 5)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_g = label.new(x1 + array.get(delta_positions, 6), 0, get_pair_by_value(array.get(delta_pairs, 6)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    delta_h = label.new(x1 + array.get(delta_positions, 7), 0, get_pair_by_value(array.get(delta_pairs, 7)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
+    label.delete(delta_a[1])
+    label.delete(delta_b[1])
+    label.delete(delta_c[1])
+    label.delete(delta_d[1])
+    label.delete(delta_e[1])
+    label.delete(delta_f[1])
+    label.delete(delta_g[1])
+    label.delete(delta_h[1])
+
+// Alerts
+if strongest_value_changed or weakest_value_changed
+    alert('NEW UPDATE: ' + alert_message, alert.freq_once_per_bar_close)
