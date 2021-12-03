@@ -451,7 +451,7 @@ if show_labels
 ////////////////////
 // Analysis
 ////////////////////
-var values = array.new_float(8)
+values = array.new_float(8)
 array.set(values, 0, EUR)
 array.set(values, 1, USD)
 array.set(values, 2, JPY)
@@ -462,14 +462,14 @@ array.set(values, 6, CAD)
 array.set(values, 7, NZD)
 array.sort(values, order.descending)
 
-var sorted_by_ranking_names = array.new_string(8)
+sorted_by_ranking_names = array.new_string(8)
 
 ////////////////////
 // Panel
 ////////////////////
 [border_color, border_width, frame_color, frame_width, text_color, text_size, bgcolor, head_text_color, head_text_size, head_bgcolor] = mycolor.theme(panel_theme)
 
-var table panel = table.new(panel_position, 4, 8, border_color=border_color, border_width=border_width, frame_color=frame_color, frame_width=frame_width)
+table panel = table.new(panel_position, 4, 8, border_color=border_color, border_width=border_width, frame_color=frame_color, frame_width=frame_width)
 
 if is_multi and is_monokai
     text_color := c_black
@@ -506,7 +506,7 @@ DELTA_USDCAD = math.abs(USD-CAD)
 DELTA_NZDUSD = math.abs(NZD-USD)
 DELTA_GBPJPY = math.abs(GBP-JPY)
 
-var delta_pairs = array.new_float(8)
+delta_pairs = array.new_float(8)
 array.set(delta_pairs, 0, DELTA_EURUSD)
 array.set(delta_pairs, 1, DELTA_USDJPY)
 array.set(delta_pairs, 2, DELTA_USDCHF)
@@ -518,18 +518,18 @@ array.set(delta_pairs, 7, DELTA_GBPJPY)
 array.sort(delta_pairs, order.descending)
 DELTA_MAX = array.max(delta_pairs)
 
-plot(show_pair ? array.get(delta_pairs, 0) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*0, color=ac.gogh_cafeterrace('yellow'))
-plot(show_pair ? array.get(delta_pairs, 1) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*1, color=ac.gogh_cafeterrace('yellow'))
-plot(show_pair ? array.get(delta_pairs, 2) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*2, color=ac.gogh_cafeterrace('orange'))
-plot(show_pair ? array.get(delta_pairs, 3) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*3, color=ac.gogh_cafeterrace('orange'))
-plot(show_pair ? array.get(delta_pairs, 4) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*4, color=ac.gogh_cafeterrace('light-blue'))
-plot(show_pair ? array.get(delta_pairs, 5) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*5, color=ac.gogh_cafeterrace('light-blue'))
-plot(show_pair ? array.get(delta_pairs, 6) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*6, color=ac.gogh_cafeterrace('blue'))
-plot(show_pair ? array.get(delta_pairs, 7) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*7, color=ac.gogh_cafeterrace('blue'))
+plot(show_pair ? (array.get(delta_pairs, 0)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*0, color=ac.gogh_cafeterrace('yellow'))
+plot(show_pair ? (array.get(delta_pairs, 1)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*1, color=ac.gogh_cafeterrace('yellow'))
+plot(show_pair ? (array.get(delta_pairs, 2)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*2, color=ac.gogh_cafeterrace('orange'))
+plot(show_pair ? (array.get(delta_pairs, 3)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*3, color=ac.gogh_cafeterrace('orange'))
+plot(show_pair ? (array.get(delta_pairs, 4)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*4, color=ac.gogh_cafeterrace('light-blue'))
+plot(show_pair ? (array.get(delta_pairs, 5)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*5, color=ac.gogh_cafeterrace('light-blue'))
+plot(show_pair ? (array.get(delta_pairs, 6)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*6, color=ac.gogh_cafeterrace('blue'))
+plot(show_pair ? (array.get(delta_pairs, 7)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*7, color=ac.gogh_cafeterrace('blue'))
 
 if (show_pair)
-    var delta_positions = array.new_int(8)
-    var delta_labels = array.new_string(8)
+    delta_positions = array.new_int(8)
+    delta_labels = array.new_string(8)
     
     for i = 0 to 7
         array.set(delta_positions, i, i * -7)
