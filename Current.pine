@@ -13,8 +13,6 @@ import boitoki/ma_function/2 as ma
 ////////////////////
 // Defines
 ////////////////////
-var int i_EUR = 0, var int i_USD = 1, var int i_JPY = 2, var int i_CHF = 3
-var int i_GBP = 4, var int i_AUD = 5, var int i_CAD = 6, var int i_NZD = 7
 noneColor = color.new(color.black, 100)
 g1 = 'General:'
 g2 = 'Display:'
