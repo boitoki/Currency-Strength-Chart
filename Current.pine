@@ -582,7 +582,7 @@ get_pair_by_value (_v) =>
 
 delta_positions = array.new_int(8)
 
-for i = 0 to 8
+for i = 0 to 7
     array.set(delta_positions, i, i * -7)
 
 plot(show_pair ? (array.get(delta_pairs, 0)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*0, color=ac.gogh_cafeterrace('yellow'))
