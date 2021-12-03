@@ -196,7 +196,7 @@ panel_theme = input.string(title='Color theme', defval='multi', options=['multi'
 is_multi = panel_theme == 'multi'
 
 // Currency pair strength
-var show_pair = input.bool(title="Currency pair strength", defval=false, group=g9)
+show_pair = input.bool(title="Currency pair strength", defval=false, group=g9)
 offset = show_pair ? input.int(defval=100, title="Position offset", options=[0,20,40,60,80,100,120,140,160,180,200], group=g9) : 0
 pair_margin = input.int(defval=4, title="Position margin", options=[0,2,4,6,8,10,16,20], group=g9)
 pair_labelcolor = input.color(defval=color.gray, title="Label color", group=g9)
@@ -451,7 +451,7 @@ if show_labels
 ////////////////////
 // Analysis
 ////////////////////
-values = array.new_float(8)
+var values = array.new_float(8)
 array.set(values, 0, EUR)
 array.set(values, 1, USD)
 array.set(values, 2, JPY)
@@ -462,7 +462,7 @@ array.set(values, 6, CAD)
 array.set(values, 7, NZD)
 array.sort(values, order.descending)
 
-sorted_by_ranking_names = array.new_string(8)
+var sorted_by_ranking_names = array.new_string(8)
 
 ////////////////////
 // Panel
@@ -506,7 +506,7 @@ DELTA_USDCAD = math.abs(USD-CAD)
 DELTA_NZDUSD = math.abs(NZD-USD)
 DELTA_GBPJPY = math.abs(GBP-JPY)
 
-delta_pairs = array.new_float(8)
+var delta_pairs = array.new_float(8)
 array.set(delta_pairs, 0, DELTA_EURUSD)
 array.set(delta_pairs, 1, DELTA_USDJPY)
 array.set(delta_pairs, 2, DELTA_USDCHF)
@@ -528,8 +528,8 @@ plot(show_pair ? (array.get(delta_pairs, 6)) : na, style=plot.style_histogram, l
 plot(show_pair ? (array.get(delta_pairs, 7)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*7, color=ac.gogh_cafeterrace('blue'))
 
 if (show_pair)
-    delta_positions = array.new_int(8)
-    delta_labels = array.new_string(8)
+    var delta_positions = array.new_int(8)
+    var delta_labels = array.new_string(8)
     
     for i = 0 to 7
         array.set(delta_positions, i, i * -7)
@@ -556,13 +556,13 @@ if (show_pair)
 ////////////////////
 // Alerts
 ////////////////////
-var float max_value = array.max(values)
-var float min_value = array.min(values)
-var string the_strongest_name = get_name_by_value(max_value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
-var string the_weakest_name = get_name_by_value(min_value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
-var bool strongest_value_changed = the_strongest_name != the_strongest_name[1]
-var bool weakest_value_changed = the_weakest_name != the_weakest_name[1]
-var string alert_message = array.join(sorted_by_ranking_names, ' > ')
+float max_value = array.max(values)
+float min_value = array.min(values)
+string the_strongest_name = get_name_by_value(max_value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+string the_weakest_name = get_name_by_value(min_value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+bool strongest_value_changed = the_strongest_name != the_strongest_name[1]
+bool weakest_value_changed = the_weakest_name != the_weakest_name[1]
+string alert_message = array.join(sorted_by_ranking_names, ' > ')
 
 if strongest_value_changed or weakest_value_changed
     alert('NEW UPDATE: ' + alert_message, alert.freq_once_per_bar_close)
