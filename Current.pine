@@ -537,8 +537,6 @@ plot(show_pair ? (array.get(delta_pairs, 5)) : na, style=plot.style_histogram, l
 plot(show_pair ? (array.get(delta_pairs, 6)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*6, color=ac.gogh_cafeterrace('blue'))
 plot(show_pair ? (array.get(delta_pairs, 7)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*7, color=ac.gogh_cafeterrace('blue'))
 
-//bgcolor(show_pair ? color.new(color.gray, 90) : na, offset=-offset, show_last=(7*8+1))
-
 if (show_pair)
     x1 = bar_index - (offset + pair_margin)
     delta_a = label.new(x1 + array.get(delta_positions, 0), 0, get_pair_by_value(array.get(delta_pairs, 0)), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
