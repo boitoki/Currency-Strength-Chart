@@ -207,70 +207,21 @@ pair_labelcolor = input.color(defval=color.gray, title="Label color", group=g9)
 show_levels = input.bool(title='Level lines', defval=false, group=g6)
 levels = input.int(title='Level (±)', minval=1, defval=10, group=g6)
 
-////////////////////
-// Currency mames
-////////////////////
-currency_names = array.new_string(8)
-array.set(currency_names, i_EUR, 'EUR')
-array.set(currency_names, i_USD, 'USD')
-array.set(currency_names, i_JPY, 'JPY')
-array.set(currency_names, i_GBP, 'GBP')
-array.set(currency_names, i_CHF, 'CHF')
-array.set(currency_names, i_AUD, 'AUD')
-array.set(currency_names, i_CAD, 'CAD')
-array.set(currency_names, i_NZD, 'NZD')
-
-////////////////////
-// Currency colors
-////////////////////
-currency_colors = array.new_color(8)
-array.set(currency_colors, i_EUR, c_eur)
-array.set(currency_colors, i_USD, c_usd)
-array.set(currency_colors, i_JPY, c_jpy)
-array.set(currency_colors, i_GBP, c_gbp)
-array.set(currency_colors, i_CHF, c_chf)
-array.set(currency_colors, i_AUD, c_aud)
-array.set(currency_colors, i_CAD, c_cad)
-array.set(currency_colors, i_NZD, c_nzd)
-
-////////////////////
-// Currency flags
-////////////////////
-currency_flags = array.new_string(8)
-array.set(currency_flags, i_EUR, EUR_FLAG)
-array.set(currency_flags, i_USD, USD_FLAG)
-array.set(currency_flags, i_JPY, JPY_FLAG)
-array.set(currency_flags, i_GBP, GBP_FLAG)
-array.set(currency_flags, i_CHF, CHF_FLAG)
-array.set(currency_flags, i_AUD, AUD_FLAG)
-array.set(currency_flags, i_CAD, CAD_FLAG)
-array.set(currency_flags, i_NZD, NZD_FLAG)
-
 
 ////////////////////
 // Functions
 ////////////////////
 ma_function(type, src, len) => ma.ma_function(type, src, len)
 
-get_any_by_value (_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD, _array)  =>
-    switch _v
-        _EUR => array.get(_array, i_EUR)
-        _USD => array.get(_array, i_USD)
-        _JPY => array.get(_array, i_JPY)
-        _GBP => array.get(_array, i_GBP)
-        _CHF => array.get(_array, i_CHF)
-        _AUD => array.get(_array, i_AUD)
-        _CAD => array.get(_array, i_CAD)
-        _NZD => array.get(_array, i_NZD)
+get_name_by_value(v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
+    v == _EUR ? 'EUR' : v == _USD ? 'USD' : v == _JPY ? 'JPY' : v == _CHF ? 'CHF' : v == _GBP ? 'GBP' : v == _AUD ? 'AUD' : v == _CAD ? 'CAD' : v == _NZD ? 'NZD' : na
 
-get_name_by_value (_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
-    get_any_by_value(_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD, currency_names)
+get_color_by_value(v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
+    v == _EUR ? c_eur : v == _USD ? c_usd : v == _JPY ? c_jpy : v == _CHF ? c_chf : v == _GBP ? c_gbp : v == _AUD ? c_aud : v == _CAD ? c_cad : v == _NZD ? c_nzd : na
 
-get_color_by_value (_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
-    get_any_by_value(_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD, currency_colors)
+get_flag_by_value(v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
+    v == _EUR ? EUR_FLAG : v == _USD ? USD_FLAG : v == _JPY ? JPY_FLAG : v == _CHF ? CHF_FLAG : v == _GBP ? GBP_FLAG : v == _AUD ? AUD_FLAG : v == _CAD ? CAD_FLAG : v == _NZD ? NZD_FLAG : na
 
-get_flag_by_value (_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
-    get_any_by_value(_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD, currency_flags)
 
 get_val(_v1, _v2) =>
     float res = 0
