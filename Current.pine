@@ -72,17 +72,10 @@ bool is_autoSelect = input.bool(defval=false, title="Auto selected current curre
 bool show_fill = is_autoSelect
 
 if is_autoSelect
-    show_EUR := false
-    show_USD := false
-    show_JPY := false
-    show_GBP := false
-    show_CHF := false
-    show_AUD := false
-    show_CAD := false
-    show_NZD := false
-    show_XAU := false
-    show_XAG := false
-    show_OIL := false
+    show_EUR := false, show_USD := false, show_JPY := false
+    show_GBP := false, show_CHF := false, show_AUD := false
+    show_CAD := false, show_NZD := false, show_XAU := false
+    show_XAG := false, show_OIL := false
 
 if (str.length(str.replace_all(syminfo.ticker, 'EUR', '')) < 6)
     show_EUR := true
@@ -174,18 +167,18 @@ else if color_theme == "monokai pro"
 ////////////////////
 // Lines
 show_lines = true
-lineX1 = time
-linewidth = input.int(title='Line width', defval=2, minval=1, group=g7)
-lineStyle = input.string(title='Extended line style', defval=line.style_dotted, options=[line.style_solid, line.style_dotted, line.style_dashed], group=g7)
-isLineExtend = input.string(title='Line extend', defval="No", options=["Yes", "No"], group=g7) == "Yes"
+line_x1 = time
+line_width = input.int(title='Line width', defval=2, minval=1, group=g7)
+line_style = input.string(title='Extended line style', defval=line.style_dotted, options=[line.style_solid, line.style_dotted, line.style_dashed], group=g7)
+is_line_extend = input.string(title='Line extend', defval="No", options=["Yes", "No"], group=g7) == "Yes"
 
 // Labels
 show_labels = input.bool(title='Name label', defval=true, group=g8)
-labelsize = input.string(title='Label size', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], defval=size.normal, group=g8)
-labelOffset = input.int(title='Label offset', defval=5, minval=0, group=g8)
-labelStyle = label.style_label_left
-labelX = time + timeframe.multiplier * 60 * 1000 * labelOffset
-lineX2 = isLineExtend ? time + 1000 : labelX
+label_size = input.string(title='Label size', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], defval=size.normal, group=g8)
+label_offset = input.int(title='Label offset', defval=5, minval=0, group=g8)
+label_style = label.style_label_left
+label_x = time + timeframe.multiplier * 60 * 1000 * label_offset
+line_x2 = is_line_extend ? time + 1000 : label_x
 
 // Panel
 show_panel = input.bool(title='Panel', defval=true, group=g4)
@@ -197,7 +190,7 @@ is_multi = panel_theme == 'multi'
 
 // Currency pair strength
 show_pair = input.bool(title="Currency pair strength", defval=false, group=g9)
-offset = show_pair ? input.int(defval=100, title="Position offset", options=[0,20,40,60,80,100,120,140,160,180,200], group=g9) : 0
+pair_offset = show_pair ? input.int(defval=100, title="Position offset", options=[0,20,40,60,80,100,120,140,160,180,200], group=g9) : 0
 pair_margin = input.int(defval=4, title="Position margin", options=[0,2,4,6,8,10,16,20], group=g9)
 pair_labelcolor = input.color(defval=color.gray, title="Label color", group=g9)
 
@@ -348,65 +341,65 @@ hline( levels, color=c_levels, title='Level +', linestyle=hline.style_dotted)
 hline(-levels, color=c_levels, title='Level -', linestyle=hline.style_dotted)
 
 // Lines
-plot(show_OIL ? OIL : na, title='OIL', color=c_oil, linewidth=linewidth, editable=false, show_last=offset)
-plot(show_XAG ? XAG : na, title='XAG', color=c_xag, linewidth=linewidth, editable=false, show_last=offset)
-plot(show_XAU ? XAU : na, title='XAU', color=c_xau, linewidth=linewidth, editable=false, show_last=offset)
-plot(show_NZD ? NZD : na, title='NZD', color=c_nzd, linewidth=linewidth, editable=false, show_last=offset)
-plot(show_CAD ? CAD : na, title='CAD', color=c_cad, linewidth=linewidth, editable=false, show_last=offset)
-plot(show_CHF ? CHF : na, title='CHF', color=c_chf, linewidth=linewidth, editable=false, show_last=offset)
-plot(show_AUD ? AUD : na, title='AUD', color=c_aud, linewidth=linewidth, editable=false, show_last=offset)
-plot(show_GBP ? GBP : na, title='GBP', color=c_gbp, linewidth=linewidth, editable=false, show_last=offset)
-plot(show_JPY ? JPY : na, title='JPY', color=c_jpy, linewidth=linewidth, editable=false, show_last=offset)
-plot(show_EUR ? EUR : na, title='EUR', color=c_eur, linewidth=linewidth, editable=false, show_last=offset)
-plot(show_USD ? USD : na, title='USD', color=c_usd, linewidth=linewidth, editable=false, show_last=offset)
+plot(show_OIL ? OIL : na, title='OIL', color=c_oil, linewidth=line_width, editable=false, show_last=pair_offset)
+plot(show_XAG ? XAG : na, title='XAG', color=c_xag, linewidth=line_width, editable=false, show_last=pair_offset)
+plot(show_XAU ? XAU : na, title='XAU', color=c_xau, linewidth=line_width, editable=false, show_last=pair_offset)
+plot(show_NZD ? NZD : na, title='NZD', color=c_nzd, linewidth=line_width, editable=false, show_last=pair_offset)
+plot(show_CAD ? CAD : na, title='CAD', color=c_cad, linewidth=line_width, editable=false, show_last=pair_offset)
+plot(show_CHF ? CHF : na, title='CHF', color=c_chf, linewidth=line_width, editable=false, show_last=pair_offset)
+plot(show_AUD ? AUD : na, title='AUD', color=c_aud, linewidth=line_width, editable=false, show_last=pair_offset)
+plot(show_GBP ? GBP : na, title='GBP', color=c_gbp, linewidth=line_width, editable=false, show_last=pair_offset)
+plot(show_JPY ? JPY : na, title='JPY', color=c_jpy, linewidth=line_width, editable=false, show_last=pair_offset)
+plot(show_EUR ? EUR : na, title='EUR', color=c_eur, linewidth=line_width, editable=false, show_last=pair_offset)
+plot(show_USD ? USD : na, title='USD', color=c_usd, linewidth=line_width, editable=false, show_last=pair_offset)
 
-plot(show_OIL and show_fill ? OIL : na, title='OIL', color=color.new(c_oil, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
-plot(show_XAG and show_fill ? XAG : na, title='XAG', color=color.new(c_xag, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
-plot(show_XAU and show_fill ? XAU : na, title='XAU', color=color.new(c_xau, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
-plot(show_NZD and show_fill ? NZD : na, title='NZD', color=color.new(c_nzd, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
-plot(show_CAD and show_fill ? CAD : na, title='CAD', color=color.new(c_cad, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
-plot(show_CHF and show_fill ? CHF : na, title='CHF', color=color.new(c_chf, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
-plot(show_AUD and show_fill ? AUD : na, title='AUD', color=color.new(c_aud, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
-plot(show_GBP and show_fill ? GBP : na, title='GBP', color=color.new(c_gbp, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
-plot(show_JPY and show_fill ? JPY : na, title='JPY', color=color.new(c_jpy, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
-plot(show_EUR and show_fill ? EUR : na, title='EUR', color=color.new(c_eur, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
-plot(show_USD and show_fill ? USD : na, title='USD', color=color.new(c_usd, 92), linewidth=0, style=plot.style_area, editable=true, show_last=offset)
+plot(show_OIL and show_fill ? OIL : na, title='OIL', color=color.new(c_oil, 92), linewidth=0, style=plot.style_area, editable=true, show_last=pair_offset)
+plot(show_XAG and show_fill ? XAG : na, title='XAG', color=color.new(c_xag, 92), linewidth=0, style=plot.style_area, editable=true, show_last=pair_offset)
+plot(show_XAU and show_fill ? XAU : na, title='XAU', color=color.new(c_xau, 92), linewidth=0, style=plot.style_area, editable=true, show_last=pair_offset)
+plot(show_NZD and show_fill ? NZD : na, title='NZD', color=color.new(c_nzd, 92), linewidth=0, style=plot.style_area, editable=true, show_last=pair_offset)
+plot(show_CAD and show_fill ? CAD : na, title='CAD', color=color.new(c_cad, 92), linewidth=0, style=plot.style_area, editable=true, show_last=pair_offset)
+plot(show_CHF and show_fill ? CHF : na, title='CHF', color=color.new(c_chf, 92), linewidth=0, style=plot.style_area, editable=true, show_last=pair_offset)
+plot(show_AUD and show_fill ? AUD : na, title='AUD', color=color.new(c_aud, 92), linewidth=0, style=plot.style_area, editable=true, show_last=pair_offset)
+plot(show_GBP and show_fill ? GBP : na, title='GBP', color=color.new(c_gbp, 92), linewidth=0, style=plot.style_area, editable=true, show_last=pair_offset)
+plot(show_JPY and show_fill ? JPY : na, title='JPY', color=color.new(c_jpy, 92), linewidth=0, style=plot.style_area, editable=true, show_last=pair_offset)
+plot(show_EUR and show_fill ? EUR : na, title='EUR', color=color.new(c_eur, 92), linewidth=0, style=plot.style_area, editable=true, show_last=pair_offset)
+plot(show_USD and show_fill ? USD : na, title='USD', color=color.new(c_usd, 92), linewidth=0, style=plot.style_area, editable=true, show_last=pair_offset)
 
 if show_lines
-    lineExtend = isLineExtend ? extend.right : extend.none
+    line_extend = is_line_extend ? extend.right : extend.none
 
     if show_OIL
-        OIL_LINE = line.new(lineX1, OIL, lineX2, OIL, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_oil)
+        OIL_LINE = line.new(line_x1, OIL, line_x2, OIL, extend=line_extend, xloc=xloc.bar_time, width=line_width, style=line_style, color=c_oil)
         line.delete(OIL_LINE[1])
     if show_XAG
-        XAG_LINE = line.new(lineX1, XAG, lineX2, XAG, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_xag)
+        XAG_LINE = line.new(line_x1, XAG, line_x2, XAG, extend=line_extend, xloc=xloc.bar_time, width=line_width, style=line_style, color=c_xag)
         line.delete(XAG_LINE[1])
     if show_XAU
-        XAU_LINE = line.new(lineX1, XAU, lineX2, XAU, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_xau)
+        XAU_LINE = line.new(line_x1, XAU, line_x2, XAU, extend=line_extend, xloc=xloc.bar_time, width=line_width, style=line_style, color=c_xau)
         line.delete(XAU_LINE[1])
     if show_NZD
-        NZD_LINE = line.new(lineX1, NZD, lineX2, NZD, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_nzd)
+        NZD_LINE = line.new(line_x1, NZD, line_x2, NZD, extend=line_extend, xloc=xloc.bar_time, width=line_width, style=line_style, color=c_nzd)
         line.delete(NZD_LINE[1])
     if show_CAD
-        CAD_LINE = line.new(lineX1, CAD, lineX2, CAD, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_cad)
+        CAD_LINE = line.new(line_x1, CAD, line_x2, CAD, extend=line_extend, xloc=xloc.bar_time, width=line_width, style=line_style, color=c_cad)
         line.delete(CAD_LINE[1])
     if show_CHF
-        CHF_LINE = line.new(lineX1, CHF, lineX2, CHF, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_chf)
+        CHF_LINE = line.new(line_x1, CHF, line_x2, CHF, extend=line_extend, xloc=xloc.bar_time, width=line_width, style=line_style, color=c_chf)
         line.delete(CHF_LINE[1])
     if show_AUD
-        AUD_LINE = line.new(lineX1, AUD, lineX2, AUD, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_aud)
+        AUD_LINE = line.new(line_x1, AUD, line_x2, AUD, extend=line_extend, xloc=xloc.bar_time, width=line_width, style=line_style, color=c_aud)
         line.delete(AUD_LINE[1])
     if show_GBP
-        GBP_LINE = line.new(lineX1, GBP, lineX2, GBP, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_gbp)
+        GBP_LINE = line.new(line_x1, GBP, line_x2, GBP, extend=line_extend, xloc=xloc.bar_time, width=line_width, style=line_style, color=c_gbp)
         line.delete(GBP_LINE[1])
     if show_JPY
-        JPY_LINE = line.new(lineX1, JPY, lineX2, JPY, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_jpy)
+        JPY_LINE = line.new(line_x1, JPY, line_x2, JPY, extend=line_extend, xloc=xloc.bar_time, width=line_width, style=line_style, color=c_jpy)
         line.delete(JPY_LINE[1])
     if show_EUR
-        EUR_LINE = line.new(lineX1, EUR, lineX2, EUR, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_eur)
+        EUR_LINE = line.new(line_x1, EUR, line_x2, EUR, extend=line_extend, xloc=xloc.bar_time, width=line_width, style=line_style, color=c_eur)
         line.delete(EUR_LINE[1])
     if show_USD
-        USD_LINE = line.new(lineX1, USD, lineX2, USD, extend=lineExtend, xloc=xloc.bar_time, width=linewidth, style=lineStyle, color=c_usd)
+        USD_LINE = line.new(line_x1, USD, line_x2, USD, extend=line_extend, xloc=xloc.bar_time, width=line_width, style=line_style, color=c_usd)
         line.delete(USD_LINE[1])
 
 
@@ -415,37 +408,37 @@ if show_labels
     label_text_color = is_monokai ? c_black : color.white
 
     if show_OIL
-        label OIL_LABEL = label.new(labelX, OIL, 'OIL', color=c_oil, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label OIL_LABEL = label.new(label_x, OIL, 'OIL', color=c_oil, xloc=xloc.bar_time, textcolor=label_text_color, style=label_style, size=label_size)
         label.delete(OIL_LABEL[1])
     if show_XAG
-        label XAG_LABEL = label.new(labelX, XAG, 'XAG', color=c_xag, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label XAG_LABEL = label.new(label_x, XAG, 'XAG', color=c_xag, xloc=xloc.bar_time, textcolor=label_text_color, style=label_style, size=label_size)
         label.delete(XAG_LABEL[1])
     if show_XAU
-        label XAU_LABEL = label.new(labelX, XAU, 'XAU', color=c_xau, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label XAU_LABEL = label.new(label_x, XAU, 'XAU', color=c_xau, xloc=xloc.bar_time, textcolor=label_text_color, style=label_style, size=label_size)
         label.delete(XAU_LABEL[1])
     if show_NZD
-        label NZD_LABEL = label.new(labelX, NZD, 'NZD', color=c_nzd, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label NZD_LABEL = label.new(label_x, NZD, 'NZD', color=c_nzd, xloc=xloc.bar_time, textcolor=label_text_color, style=label_style, size=label_size)
         label.delete(NZD_LABEL[1])
     if show_CAD
-        label CAD_LABEL = label.new(labelX, CAD, 'CAD', color=c_cad, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label CAD_LABEL = label.new(label_x, CAD, 'CAD', color=c_cad, xloc=xloc.bar_time, textcolor=label_text_color, style=label_style, size=label_size)
         label.delete(CAD_LABEL[1])
     if show_CHF
-        label CHF_LABEL = label.new(labelX, CHF, 'CHF', color=c_chf, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label CHF_LABEL = label.new(label_x, CHF, 'CHF', color=c_chf, xloc=xloc.bar_time, textcolor=label_text_color, style=label_style, size=label_size)
         label.delete(CHF_LABEL[1])
     if show_AUD
-        label AUD_LABEL = label.new(labelX, AUD, 'AUD', color=c_aud, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label AUD_LABEL = label.new(label_x, AUD, 'AUD', color=c_aud, xloc=xloc.bar_time, textcolor=label_text_color, style=label_style, size=label_size)
         label.delete(AUD_LABEL[1])
     if show_GBP
-        label GBP_LABEL = label.new(labelX, GBP, 'GBP', color=c_gbp, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label GBP_LABEL = label.new(label_x, GBP, 'GBP', color=c_gbp, xloc=xloc.bar_time, textcolor=label_text_color, style=label_style, size=label_size)
         label.delete(GBP_LABEL[1])
     if show_JPY
-        label JPY_LABEL = label.new(labelX, JPY, 'JPY', color=c_jpy, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label JPY_LABEL = label.new(label_x, JPY, 'JPY', color=c_jpy, xloc=xloc.bar_time, textcolor=label_text_color, style=label_style, size=label_size)
         label.delete(JPY_LABEL[1])
     if show_EUR
-        label EUR_LABEL = label.new(labelX, EUR, 'EUR', color=c_eur, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label EUR_LABEL = label.new(label_x, EUR, 'EUR', color=c_eur, xloc=xloc.bar_time, textcolor=label_text_color, style=label_style, size=label_size)
         label.delete(EUR_LABEL[1])
     if show_USD
-        label USD_LABEL = label.new(labelX, USD, 'USD', color=c_usd, xloc=xloc.bar_time, textcolor=label_text_color, style=labelStyle, size=labelsize)
+        label USD_LABEL = label.new(label_x, USD, 'USD', color=c_usd, xloc=xloc.bar_time, textcolor=label_text_color, style=label_style, size=label_size)
         label.delete(USD_LABEL[1])
 
 ////////////////////
@@ -518,14 +511,14 @@ array.set(delta_pairs, 7, DELTA_GBPJPY)
 array.sort(delta_pairs, order.descending)
 DELTA_MAX = array.max(delta_pairs)
 
-plot(show_pair ? (array.get(delta_pairs, 0)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*0, color=ac.gogh_cafeterrace('yellow'))
-plot(show_pair ? (array.get(delta_pairs, 1)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*1, color=ac.gogh_cafeterrace('yellow'))
-plot(show_pair ? (array.get(delta_pairs, 2)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*2, color=ac.gogh_cafeterrace('orange'))
-plot(show_pair ? (array.get(delta_pairs, 3)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*3, color=ac.gogh_cafeterrace('orange'))
-plot(show_pair ? (array.get(delta_pairs, 4)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*4, color=ac.gogh_cafeterrace('light-blue'))
-plot(show_pair ? (array.get(delta_pairs, 5)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*5, color=ac.gogh_cafeterrace('light-blue'))
-plot(show_pair ? (array.get(delta_pairs, 6)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*6, color=ac.gogh_cafeterrace('blue'))
-plot(show_pair ? (array.get(delta_pairs, 7)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-offset-pair_margin-7*7, color=ac.gogh_cafeterrace('blue'))
+plot(show_pair ? (array.get(delta_pairs, 0)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-pair_offset-pair_margin-7*0, color=ac.gogh_cafeterrace('yellow'))
+plot(show_pair ? (array.get(delta_pairs, 1)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-pair_offset-pair_margin-7*1, color=ac.gogh_cafeterrace('yellow'))
+plot(show_pair ? (array.get(delta_pairs, 2)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-pair_offset-pair_margin-7*2, color=ac.gogh_cafeterrace('orange'))
+plot(show_pair ? (array.get(delta_pairs, 3)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-pair_offset-pair_margin-7*3, color=ac.gogh_cafeterrace('orange'))
+plot(show_pair ? (array.get(delta_pairs, 4)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-pair_offset-pair_margin-7*4, color=ac.gogh_cafeterrace('light-blue'))
+plot(show_pair ? (array.get(delta_pairs, 5)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-pair_offset-pair_margin-7*5, color=ac.gogh_cafeterrace('light-blue'))
+plot(show_pair ? (array.get(delta_pairs, 6)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-pair_offset-pair_margin-7*6, color=ac.gogh_cafeterrace('blue'))
+plot(show_pair ? (array.get(delta_pairs, 7)) : na, style=plot.style_histogram, linewidth=12, show_last=1, editable=false, offset=-pair_offset-pair_margin-7*7, color=ac.gogh_cafeterrace('blue'))
 
 if (show_pair)
     delta_positions = array.new_int(8)
@@ -535,7 +528,7 @@ if (show_pair)
         array.set(delta_positions, i, i * -7)
         array.set(delta_labels, i, get_pair_by_value(array.get(delta_pairs, i), DELTA_EURUSD, DELTA_USDJPY, DELTA_USDCHF, DELTA_GBPUSD, DELTA_AUDUSD, DELTA_USDCAD, DELTA_NZDUSD, DELTA_GBPJPY))
 
-    x1 = bar_index - (offset + pair_margin)
+    x1 = bar_index - (pair_offset + pair_margin)
     delta_1 = label.new(x1 + array.get(delta_positions, 0), 0, array.get(delta_labels, 0), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
     delta_2 = label.new(x1 + array.get(delta_positions, 1), 0, array.get(delta_labels, 1), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
     delta_3 = label.new(x1 + array.get(delta_positions, 2), 0, array.get(delta_labels, 2), style=label.style_label_up, size=size.small, color=noneColor, textcolor=pair_labelcolor)
