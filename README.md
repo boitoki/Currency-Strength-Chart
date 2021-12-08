@@ -4,16 +4,6 @@
 - Added options "Source", "Calculate by"
 - Added options "Histogram" on the "auto selected"
 - Added the `if barstate.islast` for performance improvement
-<br>
-Hopefully, performance will not deteriorate 🙏<br>
-<br>
-Example:<br>
-Mode: Lookback periods<br>
-Lookback periods: 30<br>
-Smoothing: SMA/3<br>
-Calculated by: Stocastics/7<br>
-Auto selected: Yes/Histogram/Ordered<br>
-
 
 ## v26.0
 - Improved performance.
