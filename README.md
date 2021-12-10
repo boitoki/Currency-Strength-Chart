@@ -1,5 +1,5 @@
 # Currency Strength Chart
-##28.0
+## v28.0
 - Tidied settings up.
 
 ## v27.0
