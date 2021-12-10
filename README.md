@@ -1,4 +1,10 @@
 # Currency Strength Chart
+
+## v29.0
+- Line widths is editable on style tab in settings.
+- Added a new color theme "panda".
+- Removed CCI. (It doesn't work well)
+
 ## v28.0
 - Tidied settings up.
 
