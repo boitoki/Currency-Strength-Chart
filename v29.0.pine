@@ -7,7 +7,7 @@
 indicator('Currency Strength Chart', overlay=false, precision=2, max_labels_count=20)
 
 import boitoki/TableColorTheme/1 as mycolor
-import boitoki/AwesomeColor/1 as ac
+import boitoki/AwesomeColor/2 as ac
 import boitoki/ma_function/3 as ma
 
 ////////////////////
@@ -151,8 +151,8 @@ float v2_XAGUSD = show_XAU ? request.security(i_broker + ':XAGUSD', reso, source
 float v2_OILUSD = show_OIL ? request.security('USOIL', reso, source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : 0
 
 // Colors
-i_theme = input.string(title="Color theme", defval="monokai", options=["monokai", "monokai pro", "customize"], group=GP3)
-is_monokai = (i_theme == 'monokai' or i_theme == 'monokai pro')
+i_theme = input.string(title="Color theme", defval="monokai", options=["monokai", "monokai pro", "panda", "customize"], group=GP3)
+shouldBeTextBlack = (i_theme == 'monokai' or i_theme == 'monokai pro' or i_theme == 'panda')
 
 c_eur = input.color(title='EUR', defval=color.red, group=GP3, inline="color")
 c_usd = input.color(title='USD', defval=color.orange, group=GP3, inline="color")
@@ -170,34 +170,45 @@ c_red = ac.tradingview('red')
 c_black = ac.tradingview('black')
 
 // Color themes
-if i_theme == "monokai"
-    c_eur := mycolor.monokai('pink')
-    c_usd := mycolor.monokai('orange')
-    c_gbp := mycolor.monokai('green')
-    c_cad := mycolor.monokai('purple')
-    c_aud := mycolor.monokai('blue')
-    c_chf := mycolor.monokai('yellow')
-    c_green := mycolor.monokai('green')
-    c_red := mycolor.monokai('pink')
-    c_black := mycolor.monokai('black')
-else if i_theme == "monokai pro"
-    c_eur := mycolor.monokaipro('pink')
-    c_usd := mycolor.monokaipro('orange')
-    c_gbp := mycolor.monokaipro('green')
-    c_cad := mycolor.monokaipro('purple')
-    c_aud := mycolor.monokaipro('blue')
-    c_chf := mycolor.monokaipro('yellow')
-    c_green := mycolor.monokaipro('green')
-    c_red := mycolor.monokaipro('pink')
-    c_black := mycolor.monokaipro('black')
+if i_theme == 'monokai'
+    c_eur := ac.monokai('pink')
+    c_usd := ac.monokai('orange')
+    c_gbp := ac.monokai('green')
+    c_cad := ac.monokai('purple')
+    c_aud := ac.monokai('blue')
+    c_chf := ac.monokai('yellow')
+    c_green := ac.monokai('green')
+    c_red := ac.monokai('pink')
+    c_black := ac.monokai('black')
+else if i_theme == 'monokai pro'
+    c_eur := ac.monokaipro('pink')
+    c_usd := ac.monokaipro('orange')
+    c_gbp := ac.monokaipro('green')
+    c_cad := ac.monokaipro('purple')
+    c_aud := ac.monokaipro('blue')
+    c_chf := ac.monokaipro('yellow')
+    c_green := ac.monokaipro('green')
+    c_red := ac.monokaipro('pink')
+    c_black := ac.monokaipro('black')
+else if i_theme == 'panda'
+    c_eur := ac.panda('red')
+    c_usd := ac.panda('orange')
+    c_gbp := ac.panda('green')
+    c_cad := ac.panda('purple')
+    c_aud := ac.panda('blue')
+    c_chf := ac.panda('pink')
+    c_green := ac.panda('green')
+    c_red := ac.panda('red')
+    c_black := ac.panda('very-dark-gray')
 
 ////////////////////
 // Other settings
 ////////////////////
 // Lines
 show_lines = true
-i_line_width = input.int(title='Line width', defval=2, minval=1, group=GP7, inline="line")
-i_line_extend = input.string(title='Line extend', defval="No extended", options=["Extended", "No extended"], group=GP7, inline="line") == "Yes"
+i_line_width = input.int(title='Line style', defval=2, minval=1, group=GP7, inline="line")
+i_line_extend_type = input.string(title='', defval="No extended", options=["Extended", "No extended"], group=GP7, inline="line")
+i_line_extend = i_line_extend_type == "Extended"
 i_line_style = input.string(title='', defval=line.style_dotted, options=[line.style_solid, line.style_dotted, line.style_dashed], group=GP7, inline="line")
 
 // Labels
@@ -475,7 +486,7 @@ label JPY_LABEL = na
 label EUR_LABEL = na
 
 if barstate.islast and show_labels
-    label_text_color = is_monokai ? c_black : color.white
+    label_text_color = shouldBeTextBlack ? c_black : color.white
 
     if show_OIL
         OIL_LABEL := label.new(label_x, OIL, 'OIL', color=c_oil, xloc=xloc.bar_time, textcolor=label_text_color, style=i_label_style, size=i_label_size)
@@ -601,7 +612,7 @@ if barstate.islast
 ////////////////////
 [border_color, border_width, frame_color, frame_width, text_color, text_size, bgcolor, head_text_color, head_text_size, head_bgcolor] = mycolor.theme(i_panel_theme)
 
-if is_multi and is_monokai
+if is_multi and shouldBeTextBlack
     text_color := c_black
     head_text_color := c_black
 
