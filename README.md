@@ -1,4 +1,6 @@
 # Currency Strength Chart
+##28.0
+- Tidied settings up.
 
 ## v27.0
 - Added options "Source", "Calculate by"
