@@ -1,4 +1,6 @@
 # Currency Strength Chart
+## v30.0
+- Fixed CCI calculating.
 
 ## v29.0
 - Line widths is editable on style tab in settings.
