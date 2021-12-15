@@ -125,7 +125,7 @@ i_oil_width = input.int(title='', defval=2, options=[0,1,2,3,4,5,6,7,8,9,10], gr
 i_theme = input.string(title="Color theme", defval="monokai", options=["monokai", "monokai pro", "panda", "customize"], group=GP2)
 shouldBeTextBlack = (i_theme == 'monokai' or i_theme == 'monokai pro' or i_theme == 'panda')
 
-// currency_a and currency_b variables is used by histgram only
+
 string currency_a = na
 string currency_b = na
 
@@ -186,22 +186,19 @@ show_labels = input.bool(title='Name label', defval=true, group=GP8)
 i_label_size = input.string(title='Label size', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], defval=size.normal, group=GP8)
 i_label_offset = input.int(title='Label offset', defval=5, minval=0, group=GP8, inline='connected line')
 i_label_style = label.style_label_left
-label_x = time + timeframe.multiplier * 60 * 1000 * i_label_offset
-
 i_line_style = input.string(title='', defval=line.style_dotted, options=[line.style_solid, line.style_dotted, line.style_dashed], group=GP8, inline="connected line")
-i_line_extend_type = input.string(title='', defval="No extended", options=["Extended", "No extended"], group=GP8, inline="connected line")
-i_line_extend = i_line_extend_type == "Extended"
 
+label_x = time + timeframe.multiplier * 60 * 1000 * i_label_offset
 line_x1 = time
-line_x2 = i_line_extend ? time + 1000 : label_x
+line_x2 = label_x
 
 // Panel
 show_panel = input.bool(title='Panel', defval=true, group=GP4)
 i_tableYpos = input.string('top', title='Position', options = ['top', 'middle', 'bottom'], inline='11', group=GP4)
 i_tableXpos = input.string('right', title='', options=['left', 'center', 'right'], inline='11', group=GP4)
 i_panel_position = i_tableYpos + '_' + i_tableXpos
-i_panel_flagsize = input.string(title='Flag', defval=size.large, options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP4, inline='panel size')
-i_panel_textsize = input.string(title='Text', defval=size.normal, options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP4, inline='panel size')
+i_panel_flagsize = input.string(title='Flag size', defval=size.large, options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP4)
+i_panel_textsize = input.string(title='Text size', defval=size.normal, options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP4)
 i_panel_theme = input.string(title='Color', defval='multi', options=['multi', 'green', 'blue', 'orange', 'red', 'black', 'white', 'night', 'carbon'], group=GP4)
 is_multi = i_panel_theme == 'multi'
 
@@ -444,7 +441,7 @@ line USD_LINE = na
 
 
 if barstate.islast and show_labels and show_lines
-    line_extend = i_line_extend ? extend.right : extend.none
+    line_extend = extend.none
 
     if show_OIL
         OIL_LINE := line.new(line_x1, OIL, line_x2, OIL, extend=line_extend, xloc=xloc.bar_time, width=i_oil_width, style=i_line_style, color=c_oil)
