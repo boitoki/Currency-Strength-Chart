@@ -84,42 +84,43 @@ is_autoSelect = input.string(defval='No', title='Auto selected', options=['Yes',
 is_histogram = input.string('Lines only', title='', options=['Lines only', 'Histogram', 'Without lines'], inline='10', group=GP2)
 is_histogram_without_lines = is_histogram == 'Without lines'
 
-bool show_fill = is_autoSelect
-bool show_histogram = is_autoSelect and is_histogram != 'Lines only'
+show_lines = not is_histogram_without_lines
+show_fill = show_lines and is_autoSelect
+show_histogram = is_autoSelect and (is_histogram != 'Lines only')
 
 show_EUR = input.bool(title='EUR', defval=true,  group=GP2, inline='eur')
 c_eur = input.color(title='', defval=color.red, group=GP2, inline='eur')
-i_eur_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='eur')
+i_eur_width = input.int(title='', defval=2, options=[0,1,2,3,4,5,6,7,8,9,10], group=GP2, inline='eur')
 show_USD = input.bool(title='USD', defval=true,  group=GP2, inline='usd')
 c_usd = input.color(title='', defval=color.orange, group=GP2, inline='usd')
-i_usd_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='usd')
+i_usd_width = input.int(title='', defval=2, options=[0,1,2,3,4,5,6,7,8,9,10], group=GP2, inline='usd')
 show_JPY = input.bool(title='JPY', defval=true,  group=GP2, inline='jpy')
 c_jpy = input.color(title='', defval=color.aqua, group=GP2, inline='jpy')
-i_jpy_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='jpy')
+i_jpy_width = input.int(title='', defval=2, options=[0,1,2,3,4,5,6,7,8,9,10], group=GP2, inline='jpy')
 show_GBP = input.bool(title='GBP', defval=true,  group=GP2, inline='gbp')
 c_gbp = input.color(title='', defval=color.green, group=GP2, inline='gbp')
-i_gbp_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='gbp')
+i_gbp_width = input.int(title='', defval=2, options=[0,1,2,3,4,5,6,7,8,9,10], group=GP2, inline='gbp')
 show_CHF = input.bool(title='CHF', defval=true,  group=GP2, inline='chf')
 c_chf = input.color(title='', defval=color.maroon, group=GP2, inline='chf')
-i_chf_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='chf')
+i_chf_width = input.int(title='', defval=2, options=[0,1,2,3,4,5,6,7,8,9,10], group=GP2, inline='chf')
 show_AUD = input.bool(title='AUD', defval=true,  group=GP2, inline='aud')
 c_aud = input.color(title='', defval=color.blue, group=GP2, inline='aud')
-i_aud_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='aud')
+i_aud_width = input.int(title='', defval=2, options=[0,1,2,3,4,5,6,7,8,9,10], group=GP2, inline='aud')
 show_CAD = input.bool(title='CAD', defval=true,  group=GP2, inline='cad')
 c_cad = input.color(title='', defval=color.purple, group=GP2, inline='cad')
-i_cad_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='cad')
+i_cad_width = input.int(title='', defval=2, options=[0,1,2,3,4,5,6,7,8,9,10], group=GP2, inline='cad')
 show_NZD = input.bool(title='NZD', defval=true,  group=GP2, inline='nzd')
 c_nzd = input.color(title='', defval=color.fuchsia, group=GP2, inline='nzd')
-i_nzd_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='nzd')
+i_nzd_width = input.int(title='', defval=2, options=[0,1,2,3,4,5,6,7,8,9,10], group=GP2, inline='nzd')
 show_XAU = input.bool(title='XAU', defval=false, group=GP2, inline='xau')
 c_xau = input.color(title='', defval=#D7BE69, group=GP2, inline='xau')
-i_xau_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='xau')
+i_xau_width = input.int(title='', defval=2, options=[0,1,2,3,4,5,6,7,8,9,10], group=GP2, inline='xau')
 show_XAG = input.bool(title='XAG', defval=false, group=GP2, inline='xag')
 c_xag = input.color(title='', defval=color.silver, group=GP2, inline='xag')
-i_xag_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='xag')
+i_xag_width = input.int(title='', defval=2, options=[0,1,2,3,4,5,6,7,8,9,10], group=GP2, inline='xag')
 show_OIL = input.bool(title='OIL', defval=false, group=GP2, inline='oil')
 c_oil = input.color(title='', defval=#745433, group=GP2, inline='oil')
-i_oil_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='oil')
+i_oil_width = input.int(title='', defval=2, options=[0,1,2,3,4,5,6,7,8,9,10], group=GP2, inline='oil')
 
 i_theme = input.string(title="Color theme", defval="monokai", options=["monokai", "monokai pro", "panda", "customize"], group=GP2)
 shouldBeTextBlack = (i_theme == 'monokai' or i_theme == 'monokai pro' or i_theme == 'panda')
@@ -179,9 +180,6 @@ float v2_OILUSD = show_OIL ? request.security('USOIL', reso, source[i_reso_lookb
 ////////////////////
 // Other settings
 ////////////////////
-// Lines
-show_lines = not is_histogram_without_lines
-
 
 // Labels
 show_labels = input.bool(title='Name label', defval=true, group=GP8)
@@ -190,9 +188,9 @@ i_label_offset = input.int(title='Label offset', defval=5, minval=0, group=GP8, 
 i_label_style = label.style_label_left
 label_x = time + timeframe.multiplier * 60 * 1000 * i_label_offset
 
+i_line_style = input.string(title='', defval=line.style_dotted, options=[line.style_solid, line.style_dotted, line.style_dashed], group=GP8, inline="connected line")
 i_line_extend_type = input.string(title='', defval="No extended", options=["Extended", "No extended"], group=GP8, inline="connected line")
 i_line_extend = i_line_extend_type == "Extended"
-i_line_style = input.string(title='', defval=line.style_dotted, options=[line.style_solid, line.style_dotted, line.style_dashed], group=GP8, inline="connected line")
 
 line_x1 = time
 line_x2 = i_line_extend ? time + 1000 : label_x
@@ -202,8 +200,8 @@ show_panel = input.bool(title='Panel', defval=true, group=GP4)
 i_tableYpos = input.string('top', title='Position', options = ['top', 'middle', 'bottom'], inline='11', group=GP4)
 i_tableXpos = input.string('right', title='', options=['left', 'center', 'right'], inline='11', group=GP4)
 i_panel_position = i_tableYpos + '_' + i_tableXpos
-i_panel_flagsize = input.string(title='Flag size', defval=size.large, options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP4)
-i_panel_textsize = input.string(title='Text size', defval=size.normal, options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP4)
+i_panel_flagsize = input.string(title='Flag', defval=size.large, options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP4, inline='panel size')
+i_panel_textsize = input.string(title='Text', defval=size.normal, options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP4, inline='panel size')
 i_panel_theme = input.string(title='Color', defval='multi', options=['multi', 'green', 'blue', 'orange', 'red', 'black', 'white', 'night', 'carbon'], group=GP4)
 is_multi = i_panel_theme == 'multi'
 
