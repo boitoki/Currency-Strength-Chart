@@ -443,7 +443,7 @@ line EUR_LINE = na
 line USD_LINE = na
 
 
-if barstate.islast and show_lines
+if barstate.islast and show_labels and show_lines
     line_extend = i_line_extend ? extend.right : extend.none
 
     if show_OIL
@@ -494,7 +494,7 @@ label GBP_LABEL = na
 label JPY_LABEL = na
 label EUR_LABEL = na
 
-if barstate.islast and show_labels
+if barstate.islast and show_labels and show_lines
     label_text_color = shouldBeTextBlack ? c_black : color.white
 
     if show_OIL
@@ -665,4 +665,3 @@ if barstate.islast and barstate.isrealtime
     
     if strongest_value_changed or weakest_value_changed
         alert('NEW UPDATE: ' + alert_message, alert.freq_once_per_bar_close)
-
