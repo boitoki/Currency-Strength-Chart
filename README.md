@@ -1,4 +1,9 @@
 # Currency Strength Chart
+## v31.0
+Sorry, organized the settings again.
+- Removed an option "Histogram inverted". to auto selected.
+- Removed an option "Line extend".
+
 ## v30.0
 - Fixed CCI calculating.
 
