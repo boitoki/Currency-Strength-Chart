@@ -1,5 +1,5 @@
 # Currency Strength Chart
-## v34.0
+## v33.0
 I’m working on improving my performance.<br>
 Added an option Calculated on.<br>
 If you select "after the bar closed", the calculation will be done only when the bar is fixed.<br>
