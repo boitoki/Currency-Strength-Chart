@@ -1,4 +1,16 @@
 # Currency Strength Chart
+## v34.0
+I’m working on improving my performance.<br>
+Added an option Calculated on.<br>
+If you select "after the bar closed", the calculation will be done only when the bar is fixed.<br>
+If you prefer to always calculate as before, select "every ticks".<br>
+
+パフォーマンスの向上に努めています。<br>
+Calculated onというオプションを追加しました。<br>
+“after the bar closed”を選択すると、バーが確定したときにだけ計算します。<br>
+これまで通り、常に計算することを望む場合は、”every ticks” を選択してください。<br>
+
+
 ## v31.0
 Sorry, organized the settings again.
 - Removed an option "Histogram inverted". to auto selected.
