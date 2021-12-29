@@ -1,4 +1,8 @@
 # Currency Strength Chart
+## v34.0
+- Removed alerts
+- Removed panel color theme
+
 ## v33.0
 I’m working on improving my performance.<br>
 Added an option "Calculated on".<br>
