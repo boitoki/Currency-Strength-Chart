@@ -1,7 +1,10 @@
 # Currency Strength Chart
-## v34.0
+## Next
 - Removed alerts
-- Removed panel color theme
+
+## v34.0
+- Added 'max_lines_count' and 'max_labels_count'
+- Removed panel color theme option
 
 ## v33.0
 I’m working on improving my performance.<br>
