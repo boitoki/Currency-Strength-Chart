@@ -2,6 +2,11 @@
 ## Next
 - Removed alerts
 
+## v35.0
+- Changed the "Currency pair strength" chart to a table.
+- Added an option "Show charts"
+- Removed a ticker "OIL"
+
 ## v34.0
 - Added 'max_lines_count' and 'max_labels_count'
 - Removed panel color theme option
