@@ -16,11 +16,10 @@ import boitoki/ma_function/3 as ma
 GP1 = 'General'
 GP2 = 'Display'
 GP3 = 'Colors'
-GP4 = 'Panel'
+GP4 = 'Currency strength panel'
 GP5 = 'Source'
 GP6 = 'Options'
-GP7 = 'Line style'
-GP8 = 'Label style'
+GP7 = 'Labels'
 GP9 = 'Currency pair strength'
 EUR_FLAG = '🇪🇺'
 USD_FLAG = '🇺🇸'
@@ -33,16 +32,16 @@ NZD_FLAG = '🇳🇿'
 t_reso_customize    = 'Resolution'
 t_reso_lookback     = 'Lookback periods'
 t_reso_auto         = 'Auto'
-t_calc_every        = 'every ticks'
-t_calc_after        = 'after the bar closed'
+t_calc_every        = 'Every ticks'
+t_calc_after        = 'After the bar closed'
 t_histogram_option1 = 'Lines only'
-t_histogram_option2 = 'Histogram'
-t_histogram_option3 = 'Without lines'
-t_theme_option1 = 'monokai'
-t_theme_option2 = 'monokai pro'
-t_theme_option3 = 'panda'
-t_theme_option4 = 'TradingView'
-t_theme_option5 = 'Customize'
+t_histogram_option2 = 'Lines w/ Histogram'
+t_histogram_option3 = 'Histogram only'
+t_theme_option1     = 'monokai'
+t_theme_option2     = 'monokai pro'
+t_theme_option3     = 'panda'
+t_theme_option4     = 'TradingView'
+t_theme_option5     = 'Customize'
 color_gold = #D7BE69
 color_none = color.new(color.black, 100)
 
@@ -79,143 +78,112 @@ f_matched_name_by_ticker (_name) => str.contains(syminfo.ticker, _name)
 ////////////////////
 // Inputs
 ////////////////////
-reso_autovalue = not timeframe.isintraday ? '12M' : timeframe.multiplier >= 60 ? 'W' : timeframe.multiplier >= 240 ? 'M' : 'D'
-i_reso_mode = input.string(defval=t_reso_auto, title='Mode', options=[t_reso_auto, t_reso_customize, t_reso_lookback], group=GP1)
-i_reso_value = input.timeframe(defval='D', title='Resolution', group=GP1, tooltip='When you choose the "Resolution" on the mode.')
-i_reso_lookback = i_reso_mode == t_reso_lookback ? input.int(defval=100, title='Lookback periods', minval=1, group=GP1, tooltip='When you choose the "Lookback periods" on the mode.') : 1
-i_broker = input.string(title='Brokers', options=['OANDA', 'FOREXCOM', 'SAXO', 'FX_IDC', 'FX'], defval='OANDA', group=GP1)
-i_calclate = input.string(defval=t_calc_every, title='Calculated on', options=[t_calc_after, t_calc_every], group=GP1)
+i_reso_autovalue = not timeframe.isintraday ? '12M' : timeframe.multiplier >= 60 ? 'W' : timeframe.multiplier >= 240 ? 'M' : 'D'
+i_reso_mode = input.string(t_reso_auto, 'Mode', options=[t_reso_auto, t_reso_customize, t_reso_lookback], group=GP1)
+i_reso_value = input.timeframe('D', 'Resolution', group=GP1, tooltip='When you choose the "Resolution" on the mode.')
+i_reso_lookback = i_reso_mode == t_reso_lookback ? input.int(100, 'Lookback periods', minval=1, group=GP1, tooltip='When you choose the "Lookback periods" on the mode.') : 1
+i_broker = input.string('OANDA', 'Brokers', options=['OANDA', 'FOREXCOM', 'SAXO', 'FX_IDC', 'FX'], group=GP1)
+i_calclate = input.string(t_calc_every, 'Calculated on', options=[t_calc_after, t_calc_every], group=GP1)
 
-reso = f_reso(i_reso_mode, reso_autovalue, i_reso_value)
+v_reso = f_reso(i_reso_mode, i_reso_autovalue, i_reso_value)
 should_be_calclated = i_calclate == t_calc_after ? barstate.isconfirmed : true
-
-////////////////////
-// Source
-////////////////////
-i_source = input.source(defval=close, title='Source', group=GP5)
-i_calc = input.string(defval='Price', title='Calculated by', options=['Price', 'RSI', 'CCI', 'Stochastics'], inline='calc', group=GP5)
-i_length = input.int(defval=7, title='', inline='calc', group=GP5, tooltip='A value that is valid for non `Price`.')
-i_smoothtype = input.string(defval='SMA', title='Smoothing by', options=['ALMA', 'AMA', 'DEMA', 'EMA', 'HMA', 'KAMA', 'LSMA', 'MAV', 'RMA', 'SMA', 'SWMA', 'TEMA', 'TMA', 'VWMA', 'WMA', 'ZLEMA'], inline='smooth', group=GP5)
-i_smooth = input.int(defval=1, title='', minval=1, inline='smooth', group=GP5)
-source = f_calculated_by(i_calc, i_source, i_length, 3)
 
 ////////////////////
 // Display
 ////////////////////
-show_chart   = input.bool(true, 'Show charts', group=GP2)
-is_autoSelect = input.string(defval='No', title='Auto selected', options=['Yes', 'No'], inline='10', group=GP2) == 'Yes'
-is_histogram = input.string(t_histogram_option1, title='', options=[t_histogram_option1, t_histogram_option2, t_histogram_option3], inline='10', group=GP2)
-is_histogram_without_lines = is_histogram == t_histogram_option3
+i_show_chart   = input.bool(true, 'Show charts', inline='chart_display', group=GP2)
+i_theme = str.lower(input.string(t_theme_option1, '', options=[t_theme_option1, t_theme_option2, t_theme_option3, t_theme_option4, t_theme_option5], inline='chart_display', group=GP2))
+i_auto_selected_pair = input.string('No', 'Auto selected', options=['Yes', 'No'], inline='10', group=GP2) == 'Yes'
+i_histogram = input.string(t_histogram_option1, '', options=[t_histogram_option1, t_histogram_option2, t_histogram_option3], inline='10', group=GP2)
+i_histogram_without_lines = i_histogram == t_histogram_option3
 
-show_lines  = show_chart ? (not is_histogram_without_lines)         : false
-show_fill   = show_chart ? (show_lines and is_autoSelect)           : false
-show_histogram = show_chart ? (is_histogram != t_histogram_option1) : false
+i_show_lines = i_show_chart ? (not i_histogram_without_lines) : false
+i_show_fill = i_show_chart ? (i_show_lines and i_auto_selected_pair) : false
+i_show_hist = i_show_chart ? (i_histogram != t_histogram_option1) : false
 
-show_EUR    = input.bool(title='EUR', defval=true, group=GP2, inline='eur')
-c_eur       = input.color(title='', defval=color.red, group=GP2, inline='eur')
-i_eur_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='eur')
-show_USD    = input.bool(title='USD', defval=true, group=GP2, inline='usd')
-c_usd       = input.color(title='', defval=color.orange, group=GP2, inline='usd')
-i_usd_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='usd')
-show_JPY    = input.bool(title='JPY', defval=true, group=GP2, inline='jpy')
-c_jpy       = input.color(title='', defval=color.aqua, group=GP2, inline='jpy')
-i_jpy_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='jpy')
-show_GBP    = input.bool(title='GBP', defval=true, group=GP2, inline='gbp')
-c_gbp       = input.color(title='', defval=color.green, group=GP2, inline='gbp')
-i_gbp_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='gbp')
-show_CHF    = input.bool(title='CHF', defval=true, group=GP2, inline='chf')
-c_chf       = input.color(title='', defval=color.maroon, group=GP2, inline='chf')
-i_chf_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='chf')
-show_AUD    = input.bool(title='AUD', defval=true, group=GP2, inline='aud')
-c_aud       = input.color(title='', defval=color.blue, group=GP2, inline='aud')
-i_aud_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='aud')
-show_CAD    = input.bool(title='CAD', defval=true, group=GP2, inline='cad')
-c_cad       = input.color(title='', defval=color.purple, group=GP2, inline='cad')
-i_cad_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='cad')
-show_NZD    = input.bool(title='NZD', defval=true, group=GP2, inline='nzd')
-c_nzd       = input.color(title='', defval=color.fuchsia, group=GP2, inline='nzd')
-i_nzd_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='nzd')
-show_OPT    = input.bool(title='', defval=false, group=GP2, inline='opt')
-i_opt_name  = input.string(title='', defval='XAUUSD', group=GP2, inline='opt')
-i_OPT       = input.symbol('XAU', '', group=GP2, inline='opt')
-c_opt       = input.color(title='', defval=color_gold, group=GP2, inline='opt')
-i_opt_width = input.int(title='', defval=2, options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='opt')
+i_show_EUR  = input.bool(true, 'EUR', group=GP2, inline='eur')
+c_eur       = input.color(color.red, '', group=GP2, inline='eur')
+i_eur_thin  = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='eur')
+i_show_USD  = input.bool(true, 'USD', group=GP2, inline='usd')
+c_usd       = input.color(color.orange, '', group=GP2, inline='usd')
+i_usd_thin  = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='usd')
+i_show_JPY  = input.bool(true, 'JPY', group=GP2, inline='jpy')
+c_jpy       = input.color(color.aqua, '', group=GP2, inline='jpy')
+i_jpy_thin  = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='jpy')
+i_show_GBP  = input.bool(true, 'GBP', group=GP2, inline='gbp')
+c_gbp       = input.color(color.green, '', group=GP2, inline='gbp')
+i_gbp_thin  = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='gbp')
+i_show_CHF  = input.bool(true, 'CHF', group=GP2, inline='chf')
+c_chf       = input.color(color.maroon, '', group=GP2, inline='chf')
+i_chf_thin  = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='chf')
+i_show_AUD  = input.bool(true, 'AUD', group=GP2, inline='aud')
+c_aud       = input.color(color.blue, '', group=GP2, inline='aud')
+i_aud_thin  = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='aud')
+i_show_CAD  = input.bool(true, 'CAD', group=GP2, inline='cad')
+c_cad       = input.color(color.purple, '', group=GP2, inline='cad')
+i_cad_thin  = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='cad')
+i_show_NZD  = input.bool(true, 'NZD', group=GP2, inline='nzd')
+c_nzd       = input.color(color.fuchsia, '', group=GP2, inline='nzd')
+i_nzd_thin  = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='nzd')
+i_show_OPT  = input.bool(false, '', group=GP2, inline='opt')
+i_opt_name  = input.string('XAU', '', group=GP2, inline='opt')
+i_OPT       = input.symbol('XAUUSD', '', group=GP2, inline='opt')
+c_opt       = input.color(color_gold, '', group=GP2, inline='opt')
+i_opt_thin  = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='opt')
 
-i_theme = str.lower(input.string(title="Color theme", defval=t_theme_option1, options=[t_theme_option1, t_theme_option2, t_theme_option3, t_theme_option4, t_theme_option5], group=GP2))
-i_histogram_color = input.string(defval="Flat", title="Histogram color is", options=['Flat', 'Depth'], group=GP2)
-should_be_text_black = (i_theme == 'monokai' or i_theme == 'monokai pro' or i_theme == 'panda')
+i_should_be_text_black = (i_theme == 'monokai' or i_theme == 'monokai pro' or i_theme == 'panda')
 
-if barstate.isfirst and is_autoSelect
-    show_EUR := f_matched_name_by_ticker('EUR'), show_USD := f_matched_name_by_ticker('USD'), show_JPY := f_matched_name_by_ticker('JPY')
-    show_GBP := f_matched_name_by_ticker('GBP'), show_CHF := f_matched_name_by_ticker('CHF'), show_AUD := f_matched_name_by_ticker('AUD')
-    show_CAD := f_matched_name_by_ticker('CAD'), show_NZD := f_matched_name_by_ticker('NZD')
-    show_OPT := false
-
-
-var float v1_EURUSD = na, var float v2_EURUSD = na
-var float v1_USDJPY = na, var float v2_USDJPY = na
-var float v1_USDCHF = na, var float v2_USDCHF = na
-var float v1_GBPUSD = na, var float v2_GBPUSD = na
-var float v1_AUDUSD = na, var float v2_AUDUSD = na
-var float v1_USDCAD = na, var float v2_USDCAD = na
-var float v1_NZDUSD = na, var float v2_NZDUSD = na
-var float v1_OPTUSD = na, var float v2_OPTUSD = na
-
-v1_EURUSD := should_be_calclated ? request.security(i_broker + ':EURUSD', timeframe.period, source) : v1_EURUSD[1]
-v1_USDJPY := should_be_calclated ? request.security(i_broker + ':USDJPY', timeframe.period, source) : v1_USDJPY[1]
-v1_USDCHF := should_be_calclated ? request.security(i_broker + ':USDCHF', timeframe.period, source) : v1_USDCHF[1]
-v1_GBPUSD := should_be_calclated ? request.security(i_broker + ':GBPUSD', timeframe.period, source) : v1_GBPUSD[1]
-v1_AUDUSD := should_be_calclated ? request.security(i_broker + ':AUDUSD', timeframe.period, source) : v1_AUDUSD[1]
-v1_USDCAD := should_be_calclated ? request.security(i_broker + ':USDCAD', timeframe.period, source) : v1_USDCAD[1]
-v1_NZDUSD := should_be_calclated ? request.security(i_broker + ':NZDUSD', timeframe.period, source) : v1_NZDUSD[1]
-v1_OPTUSD := should_be_calclated and show_OPT ? request.security(i_OPT, timeframe.period, source)   : v1_OPTUSD[1]
-
-v2_EURUSD := should_be_calclated ? request.security(i_broker + ':EURUSD', reso, source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_EURUSD[1]
-v2_USDJPY := should_be_calclated ? request.security(i_broker + ':USDJPY', reso, source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_USDJPY[1]
-v2_USDCHF := should_be_calclated ? request.security(i_broker + ':USDCHF', reso, source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_USDCHF[1]
-v2_GBPUSD := should_be_calclated ? request.security(i_broker + ':GBPUSD', reso, source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_GBPUSD[1]
-v2_AUDUSD := should_be_calclated ? request.security(i_broker + ':AUDUSD', reso, source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_AUDUSD[1]
-v2_USDCAD := should_be_calclated ? request.security(i_broker + ':USDCAD', reso, source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_USDCAD[1]
-v2_NZDUSD := should_be_calclated ? request.security(i_broker + ':NZDUSD', reso, source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_NZDUSD[1]
-v2_OPTUSD := should_be_calclated and show_OPT ? request.security(i_OPT, reso, source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on)   : v2_OPTUSD[1]
-
-////////////////////
-// Other settings
-////////////////////
+if barstate.isfirst and i_auto_selected_pair
+    i_show_EUR := f_matched_name_by_ticker('EUR'), i_show_USD := f_matched_name_by_ticker('USD'), i_show_JPY := f_matched_name_by_ticker('JPY')
+    i_show_GBP := f_matched_name_by_ticker('GBP'), i_show_CHF := f_matched_name_by_ticker('CHF'), i_show_AUD := f_matched_name_by_ticker('AUD')
+    i_show_CAD := f_matched_name_by_ticker('CAD'), i_show_NZD := f_matched_name_by_ticker('NZD')
+    i_show_OPT := false
 
 // Labels
-i_label_shows = input.bool(title='Name label', defval=true, inline='name_label', group=GP8)
-i_label_size = input.string(size.normal, '', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], inline='name_label', group=GP8)
-i_line_style = input.string(line.style_dotted, '', options=[line.style_solid, line.style_dotted, line.style_dashed], inline="name_label", group=GP8)
-i_label_offset = input.int(5, '', minval=0, inline='name_label', group=GP8)
+i_label_shows = input.bool(true, 'Show labels', inline='name_label', group=GP2)
+i_label_size = input.string(size.normal, '', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], inline='name_label', group=GP2)
+i_label_line_style = line.style_dotted
+i_label_offset = 5
 i_label_style = label.style_label_left
 
 x1_label = bar_index + i_label_offset
 x1_line  = bar_index
 x2_line  = x1_label
 
-// Panel
-i_panel_show = input.bool(title='Show Panel', defval=true, group=GP4)
-i_panel_flagsize = input.string(title='Flag', defval=size.large, options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], inline='panel_display', group=GP4)
-i_panel_textsize = input.string(title='Text', defval=size.normal, options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], inline='panel_display', group=GP4)
-i_tableYpos = input.string('top', title='Position', options = ['top', 'middle', 'bottom'], inline='11', group=GP4)
-i_tableXpos = input.string('right', title='', options=['left', 'center', 'right'], inline='11', group=GP4)
-i_panel_position = i_tableYpos + '_' + i_tableXpos
+////////////////////
+// Source
+////////////////////
+i_source = input.source(close, 'Source', group=GP5)
+i_calc = input.string('Price', 'Calculated by', options=['Price', 'RSI', 'CCI', 'Stochastics'], inline='calc', group=GP5)
+i_length = input.int(7, '', inline='calc', group=GP5, tooltip='A value that is valid for non `Price`.')
+i_smoothtype = input.string('SMA', 'Smoothing by', options=['ALMA', 'AMA', 'DEMA', 'EMA', 'HMA', 'KAMA', 'LSMA', 'MAV', 'RMA', 'SMA', 'SWMA', 'TEMA', 'TMA', 'VWMA', 'WMA', 'ZLEMA'], inline='smooth', group=GP5)
+i_smooth = input.int(1, '', minval=1, inline='smooth', group=GP5)
+v_source = f_calculated_by(i_calc, i_source, i_length, 3)
+
+////////////////////
+// Other settings
+////////////////////
+// Currency strength 
+i_panel_show = input.bool(true, 'Show Currency strength', group=GP4)
+i_panel_y = input.string('top', 'Position', options = ['top', 'middle', 'bottom'], inline='11', group=GP4)
+i_panel_x = input.string('right', '', options=['left', 'center', 'right'], inline='11', group=GP4)
+i_panel_position = i_panel_y + '_' + i_panel_x
 i_panel_theme = 'multi'
+i_panel_flag_size = input.string(size.large, 'Flag', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP4)
+i_panel_text_size = input.string(size.normal, 'Text', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP4)
 
 // Currency pair strength
-i_pair_show = input.bool(title="Currency pair strength", defval=false, inline='pair_display', group=GP9)
-i_pair_color = str.lower(input.string(title='Color', defval='Dark', options=['Dark', 'light'], inline='pair_display', group=GP9))
-i_pair_ypos = input.string('bottom', title='Position', options = ['top', 'middle', 'bottom'], inline='pair_position', group=GP9)
-i_pair_xpos = input.string('right', title='', options=['left', 'center', 'right'], inline='pair_position', group=GP9)
-i_pair_position = i_pair_ypos + '_' + i_pair_xpos
-
+i_pair_show = input.bool(false, 'Show Currency pair strength', group=GP9)
+i_pair_y = input.string('bottom', 'Position', options = ['top', 'middle', 'bottom'], inline='pair_position', group=GP9)
+i_pair_x = input.string('right', '', options=['left', 'center', 'right'], inline='pair_position', group=GP9)
+i_pair_position = i_pair_y + '_' + i_pair_x
+i_pair_text_size = input.string(size.normal, 'Text', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP9)
+i_pair_color = str.lower(input.string('Dark', 'Color', options=['Dark', 'light'], group=GP9))
 
 // Options
-i_levels_show = input.bool(title='Level lines', defval=false, group=GP6)
-i_levels = input.int(title='Level (±)', minval=1, defval=10, group=GP6)
+i_levels_show = input.bool(false, 'Level lines', inline='level_line', group=GP6)
+i_levels = input.int(10, '', minval=1, inline='level_line', group=GP6)
 c_levels = color.gray
-
 
 // Color themes
 c_green = f_color(i_theme, ac.monokai('green'), ac.monokaipro('green'), ac.panda('green'), ac.tradingview_flag('green'), ac.tradingview('green'))
@@ -333,8 +301,8 @@ f_render_pair_panel (_show, _position, _colorscheme, _EURUSD, _USDJPY, _USDCHF, 
             v_color = v_value >= 0 ? c_pair_bull : c_pair_bear
             v_color := math.abs(v_value) < i_pair_strength ? c_pair_newt : v_color
     
-            table.cell(mypanel, 0, i, str.replace(v_label, '\n', ''), text_halign=text.align_left, text_color=c_ticker)
-            table.cell(mypanel, 1, i, str.format('{0,number,#.##}',v_value), text_halign=text.align_right, text_color=v_color)
+            table.cell(mypanel, 0, i, str.replace(v_label, '\n', ''), text_halign=text.align_left, text_color=c_ticker, text_size=i_pair_text_size)
+            table.cell(mypanel, 1, i, str.format('{0,number,#.##}',v_value), text_halign=text.align_right, text_color=v_color, text_size=i_pair_text_size)
 
 f_render_panel (_show, _position, _color, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
     v_values = array.new_float(8)
@@ -361,10 +329,10 @@ f_render_panel (_show, _position, _color, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _C
             if _show
                 head_bgcolor = c
                 bgcolor      = c
-                table.cell(mypanel, 0, i, r, bgcolor=head_bgcolor, text_color=_color, text_size=i_panel_textsize)
-                table.cell(mypanel, 1, i, f, bgcolor=bgcolor, text_color=_color, text_size=i_panel_flagsize)
-                table.cell(mypanel, 2, i, n, bgcolor=bgcolor, text_color=_color, text_size=i_panel_textsize, text_halign=text.align_left)
-                table.cell(mypanel, 3, i, v, bgcolor=bgcolor, text_color=_color, text_size=i_panel_textsize, text_halign=text.align_right)
+                table.cell(mypanel, 0, i, r, bgcolor=head_bgcolor, text_color=_color, text_size=i_panel_text_size)
+                table.cell(mypanel, 1, i, f, bgcolor=bgcolor, text_color=_color, text_size=i_panel_flag_size)
+                table.cell(mypanel, 2, i, n, bgcolor=bgcolor, text_color=_color, text_size=i_panel_text_size, text_halign=text.align_left)
+                table.cell(mypanel, 3, i, v, bgcolor=bgcolor, text_color=_color, text_size=i_panel_text_size, text_halign=text.align_right)
 
     [v_values, v_sorted]
 
@@ -372,6 +340,33 @@ f_render_panel (_show, _position, _color, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _C
 ////////////////////
 // Calculating
 ////////////////////
+var float v1_EURUSD = na, var float v2_EURUSD = na
+var float v1_USDJPY = na, var float v2_USDJPY = na
+var float v1_USDCHF = na, var float v2_USDCHF = na
+var float v1_GBPUSD = na, var float v2_GBPUSD = na
+var float v1_AUDUSD = na, var float v2_AUDUSD = na
+var float v1_USDCAD = na, var float v2_USDCAD = na
+var float v1_NZDUSD = na, var float v2_NZDUSD = na
+var float v1_OPTUSD = na, var float v2_OPTUSD = na
+
+v1_EURUSD := should_be_calclated ? request.security(i_broker + ':EURUSD', timeframe.period, v_source) : v1_EURUSD[1]
+v1_USDJPY := should_be_calclated ? request.security(i_broker + ':USDJPY', timeframe.period, v_source) : v1_USDJPY[1]
+v1_USDCHF := should_be_calclated ? request.security(i_broker + ':USDCHF', timeframe.period, v_source) : v1_USDCHF[1]
+v1_GBPUSD := should_be_calclated ? request.security(i_broker + ':GBPUSD', timeframe.period, v_source) : v1_GBPUSD[1]
+v1_AUDUSD := should_be_calclated ? request.security(i_broker + ':AUDUSD', timeframe.period, v_source) : v1_AUDUSD[1]
+v1_USDCAD := should_be_calclated ? request.security(i_broker + ':USDCAD', timeframe.period, v_source) : v1_USDCAD[1]
+v1_NZDUSD := should_be_calclated ? request.security(i_broker + ':NZDUSD', timeframe.period, v_source) : v1_NZDUSD[1]
+v1_OPTUSD := should_be_calclated and i_show_OPT ? request.security(i_OPT, timeframe.period, v_source)   : v1_OPTUSD[1]
+
+v2_EURUSD := should_be_calclated ? request.security(i_broker + ':EURUSD', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_EURUSD[1]
+v2_USDJPY := should_be_calclated ? request.security(i_broker + ':USDJPY', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_USDJPY[1]
+v2_USDCHF := should_be_calclated ? request.security(i_broker + ':USDCHF', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_USDCHF[1]
+v2_GBPUSD := should_be_calclated ? request.security(i_broker + ':GBPUSD', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_GBPUSD[1]
+v2_AUDUSD := should_be_calclated ? request.security(i_broker + ':AUDUSD', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_AUDUSD[1]
+v2_USDCAD := should_be_calclated ? request.security(i_broker + ':USDCAD', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_USDCAD[1]
+v2_NZDUSD := should_be_calclated ? request.security(i_broker + ':NZDUSD', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_NZDUSD[1]
+v2_OPTUSD := should_be_calclated and i_show_OPT ? request.security(i_OPT, v_reso, v_source[i_reso_lookback],   barmerge.gaps_off, barmerge.lookahead_on) : v2_OPTUSD[1]
+
 var float EURUSD = na
 var float USDJPY = na
 var float USDCHF = na
@@ -401,7 +396,6 @@ var float NZDJPY = na
 var float CADJPY = na
 var float CADCHF = na
 var float CHFJPY = na
-
 var float OPTUSD = na
 var float OPTJPY = na
 var float OPTCHF = na
@@ -469,41 +463,41 @@ chg_delta = ta.change(currency_delta)
 c_currency_a = get_value_by_name(currency_a, c_eur, c_usd, c_jpy, c_chf, c_gbp, c_aud, c_cad, c_nzd)
 c_currency_b = get_value_by_name(currency_b, c_eur, c_usd, c_jpy, c_chf, c_gbp, c_aud, c_cad, c_nzd)
 c_delta = currency_delta > 0 ? c_currency_a : c_currency_b
-c_delta_transparency = i_histogram_color == 'Depth' ? ((currency_delta > 0 and chg_delta < 0) or (currency_delta < 0 and chg_delta > 0) ? 65 : 40) :  40
+c_delta_transparency = 40
 
 
 ////////////////////
 // Plotting
 ////////////////////
 // Histogram
-plot(show_histogram ? currency_delta : na, color=color.new(c_delta, c_delta_transparency), style=plot.style_columns, editable=false)
+plot(i_show_hist ? currency_delta : na, color=color.new(c_delta, c_delta_transparency), style=plot.style_columns, editable=false)
 
 // Lines
-plot(show_OPT and show_lines? OPT : na, title='OPT', color=c_opt, linewidth=i_opt_width, editable=false)
-plot(show_NZD and show_lines? NZD : na, title='NZD', color=c_nzd, linewidth=i_nzd_width, editable=false)
-plot(show_CAD and show_lines? CAD : na, title='CAD', color=c_cad, linewidth=i_cad_width, editable=false)
-plot(show_CHF and show_lines? CHF : na, title='CHF', color=c_chf, linewidth=i_chf_width, editable=false)
-plot(show_AUD and show_lines? AUD : na, title='AUD', color=c_aud, linewidth=i_aud_width, editable=false)
-plot(show_GBP and show_lines? GBP : na, title='GBP', color=c_gbp, linewidth=i_gbp_width, editable=false)
-plot(show_JPY and show_lines? JPY : na, title='JPY', color=c_jpy, linewidth=i_jpy_width, editable=false)
-plot(show_EUR and show_lines? EUR : na, title='EUR', color=c_eur, linewidth=i_eur_width, editable=false)
-plot(show_USD and show_lines? USD : na, title='USD', color=c_usd, linewidth=i_usd_width, editable=false)
-plot(show_fill ? currency_a_value : na, title='A fill', color=color.new(c_currency_a, 92), linewidth=0, style=plot.style_area, editable=false)
-plot(show_fill ? currency_b_value : na, title='B fill', color=color.new(c_currency_b, 92), linewidth=0, style=plot.style_area, editable=false)
+plot(i_show_OPT and i_show_lines ? OPT : na, 'OPT', color=c_opt, linewidth=i_opt_thin, editable=false)
+plot(i_show_NZD and i_show_lines ? NZD : na, 'NZD', color=c_nzd, linewidth=i_nzd_thin, editable=false)
+plot(i_show_CAD and i_show_lines ? CAD : na, 'CAD', color=c_cad, linewidth=i_cad_thin, editable=false)
+plot(i_show_CHF and i_show_lines ? CHF : na, 'CHF', color=c_chf, linewidth=i_chf_thin, editable=false)
+plot(i_show_AUD and i_show_lines ? AUD : na, 'AUD', color=c_aud, linewidth=i_aud_thin, editable=false)
+plot(i_show_GBP and i_show_lines ? GBP : na, 'GBP', color=c_gbp, linewidth=i_gbp_thin, editable=false)
+plot(i_show_JPY and i_show_lines ? JPY : na, 'JPY', color=c_jpy, linewidth=i_jpy_thin, editable=false)
+plot(i_show_EUR and i_show_lines ? EUR : na, 'EUR', color=c_eur, linewidth=i_eur_thin, editable=false)
+plot(i_show_USD and i_show_lines ? USD : na, 'USD', color=c_usd, linewidth=i_usd_thin, editable=false)
+plot(i_show_fill ? currency_a_value : na, 'A fill', color=color.new(c_currency_a, 92), linewidth=0, style=plot.style_area, editable=false)
+plot(i_show_fill ? currency_b_value : na, 'B fill', color=color.new(c_currency_b, 92), linewidth=0, style=plot.style_area, editable=false)
 
 // Lines & Labels
-c_label = should_be_text_black ? c_black : color.white
+c_label = i_should_be_text_black ? c_black : color.white
 
-f_render_label((i_label_shows and show_lines) and show_OPT, bar_index, i_label_offset, OPT, i_opt_name, c_opt, c_label, i_line_style, i_label_style, i_opt_width)
-f_render_label((i_label_shows and show_lines) and show_NZD, bar_index, i_label_offset, NZD, 'NZD', c_nzd, c_label, i_line_style, i_label_style, i_nzd_width)
-f_render_label((i_label_shows and show_lines) and show_CAD, bar_index, i_label_offset, CAD, 'CAD', c_cad, c_label, i_line_style, i_label_style, i_cad_width)
-f_render_label((i_label_shows and show_lines) and show_CHF, bar_index, i_label_offset, CHF, 'CHF', c_chf, c_label, i_line_style, i_label_style, i_chf_width)
-f_render_label((i_label_shows and show_lines) and show_AUD, bar_index, i_label_offset, AUD, 'AUD', c_aud, c_label, i_line_style, i_label_style, i_aud_width)
-f_render_label((i_label_shows and show_lines) and show_GBP, bar_index, i_label_offset, GBP, 'GBP', c_gbp, c_label, i_line_style, i_label_style, i_gbp_width)
-f_render_label((i_label_shows and show_lines) and show_JPY, bar_index, i_label_offset, JPY, 'JPY', c_jpy, c_label, i_line_style, i_label_style, i_jpy_width)
-f_render_label((i_label_shows and show_lines) and show_EUR, bar_index, i_label_offset, EUR, 'EUR', c_eur, c_label, i_line_style, i_label_style, i_eur_width)
-f_render_label((i_label_shows and show_lines) and show_USD, bar_index, i_label_offset, USD, 'USD', c_usd, c_label, i_line_style, i_label_style, i_usd_width)
-f_render_levels(show_lines, i_levels_show, i_levels, c_levels)
+f_render_label((i_label_shows and i_show_lines) and i_show_OPT, bar_index, i_label_offset, OPT, i_opt_name, c_opt, c_label, i_label_line_style, i_label_style, i_opt_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_NZD, bar_index, i_label_offset, NZD, 'NZD', c_nzd, c_label, i_label_line_style, i_label_style, i_nzd_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_CAD, bar_index, i_label_offset, CAD, 'CAD', c_cad, c_label, i_label_line_style, i_label_style, i_cad_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_CHF, bar_index, i_label_offset, CHF, 'CHF', c_chf, c_label, i_label_line_style, i_label_style, i_chf_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_AUD, bar_index, i_label_offset, AUD, 'AUD', c_aud, c_label, i_label_line_style, i_label_style, i_aud_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_GBP, bar_index, i_label_offset, GBP, 'GBP', c_gbp, c_label, i_label_line_style, i_label_style, i_gbp_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_JPY, bar_index, i_label_offset, JPY, 'JPY', c_jpy, c_label, i_label_line_style, i_label_style, i_jpy_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_EUR, bar_index, i_label_offset, EUR, 'EUR', c_eur, c_label, i_label_line_style, i_label_style, i_eur_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_USD, bar_index, i_label_offset, USD, 'USD', c_usd, c_label, i_label_line_style, i_label_style, i_usd_thin)
+f_render_levels(i_show_lines, i_levels_show, i_levels, c_levels)
 
 ////////////////////
 // Tables
