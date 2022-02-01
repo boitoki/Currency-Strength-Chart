@@ -4,8 +4,9 @@
 
 ## v35.0
 - Changed the "Currency pair strength" chart to a table.
-- Added an option "Show charts"
-- Removed a ticker "OIL"
+- Added an option "Show charts" (To hide the line chart)
+- Removed a tickers "XAU" "XAG" and "OIL". But added one more symbol to choose from
+- Removed settings that may not be needed.
 
 ## v34.0
 - Added 'max_lines_count' and 'max_labels_count'
