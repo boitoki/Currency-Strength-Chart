@@ -2,6 +2,10 @@
 ## Next
 - Removed alerts
 
+## v36.0
+- Modified that "Auto select" didn't work
+- typo, "light" to "Light"
+
 ## v35.0
 - Changed the "Currency pair strength" chart to a table.
 - Added an option "Show charts" (To hide the line chart)
