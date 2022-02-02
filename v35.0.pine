@@ -133,7 +133,7 @@ i_opt_thin  = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline
 
 i_should_be_text_black = (i_theme == 'monokai' or i_theme == 'monokai pro' or i_theme == 'panda')
 
-if barstate.isfirst and i_auto_selected_pair
+if i_auto_selected_pair
     i_show_EUR := f_matched_name_by_ticker('EUR'), i_show_USD := f_matched_name_by_ticker('USD'), i_show_JPY := f_matched_name_by_ticker('JPY')
     i_show_GBP := f_matched_name_by_ticker('GBP'), i_show_CHF := f_matched_name_by_ticker('CHF'), i_show_AUD := f_matched_name_by_ticker('AUD')
     i_show_CAD := f_matched_name_by_ticker('CAD'), i_show_NZD := f_matched_name_by_ticker('NZD')
@@ -178,7 +178,7 @@ i_pair_y = input.string('bottom', 'Position', options = ['top', 'middle', 'botto
 i_pair_x = input.string('right', '', options=['left', 'center', 'right'], inline='pair_position', group=GP9)
 i_pair_position = i_pair_y + '_' + i_pair_x
 i_pair_text_size = input.string(size.normal, 'Text', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP9)
-i_pair_color = str.lower(input.string('Dark', 'Color', options=['Dark', 'light'], group=GP9))
+i_pair_color = str.lower(input.string('Dark', 'Color', options=['Dark', 'Light'], group=GP9))
 
 // Options
 i_levels_show = input.bool(false, 'Level lines', inline='level_line', group=GP6)
