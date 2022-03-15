@@ -2,6 +2,9 @@
 ## Next
 - Removed alerts
 
+## v38.0
+- Added another option symbol
+
 ## v36.0
 - Modified that "Auto select" didn't work
 - typo, "light" to "Light"
