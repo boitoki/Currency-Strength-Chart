@@ -2,6 +2,9 @@
 ## Next
 - Removed alerts
 
+## v39.0
+- 通貨ペア強弱に表示するペアを選択できるように変更
+
 ## v38.0
 - Added another option symbol
 
