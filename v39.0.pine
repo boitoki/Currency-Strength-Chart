@@ -1,0 +1,627 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © boitoki
+
+//@version=5
+//@see https://currency-strength.com/
+//@see https://currency-strength.com/about.html
+indicator('Currency Strength Chart', overlay=false, precision=2, max_labels_count=100, max_lines_count=100)
+
+// import
+import boitoki/AwesomeColor/3 as ac
+import boitoki/ma_function/3 as ma
+
+////////////////////
+// Defines
+////////////////////
+GP1                     = 'General'
+GP2                     = 'Display'
+GP3                     = 'Colors'
+GP4                     = 'Currency strength panel'
+GP5                     = 'Source'
+GP6                     = 'Options'
+GP7                     = 'Labels'
+GP9                     = 'Currency pair strength'
+EUR_FLAG                = '🇪🇺'
+USD_FLAG                = '🇺🇸'
+JPY_FLAG                = '🇯🇵'
+CHF_FLAG                = '🇨🇭'
+GBP_FLAG                = '🇬🇧'
+AUD_FLAG                = '🇦🇺'
+CAD_FLAG                = '🇨🇦'
+NZD_FLAG                = '🇳🇿'
+t_reso_customize        = 'Resolution'
+t_reso_lookback         = 'Lookback periods'
+t_reso_auto             = 'Auto'
+t_calc_every            = 'Every ticks'
+t_calc_after            = 'After the bar closed'
+t_histogram_option1     = 'Lines only'
+t_histogram_option2     = 'Lines and Histogram'
+t_histogram_option3     = 'Histogram only'
+t_theme_option1         = 'monokai'
+t_theme_option2         = 'monokai pro'
+t_theme_option3         = 'panda'
+t_theme_option4         = 'TradingView color'
+t_theme_option5         = 'Customize'
+
+color_gold              = #D7BE69
+color_silver            = color.silver
+color_none              = color.new(color.black, 100)
+
+option_hide             = '⊗ None'
+
+////////////////////
+// Functions
+////////////////////
+f_reso (_mode, _auto, _input) => 
+    switch _mode
+        t_reso_auto => _auto
+        t_reso_lookback => timeframe.period
+        t_reso_customize => _input
+        => _input
+
+f_get_source (_source, _length, _smooth = 3) =>
+    switch str.lower(_source)
+        'open'          => open
+        'close'         => close
+        'hlc3'          => hlc3
+        'ohlc4'         => ohlc4
+        'rsi'           => ta.rsi(close, _length)
+        'cci'           => ta.cci(close, _length) + 1000
+        'stochastics'   => ta.sma(ta.stoch(close, high, low, _length), _smooth)
+        => close
+
+f_color (_name, _a, _b, _c, _d, _e) =>
+    switch _name
+        str.lower(t_theme_option1) => _a
+        str.lower(t_theme_option2) => _b
+        str.lower(t_theme_option3) => _c
+        str.lower(t_theme_option4) => _d
+        str.lower(t_theme_option5) => _e
+        => _e
+
+f_matched_currency_a_by_ticker (_name) => str.startswith(syminfo.ticker, _name)
+
+f_matched_name_by_ticker (_name) => str.contains(syminfo.ticker, _name)
+
+f_get_currency_by_ticker (_ticker) => [str.substring(_ticker, 0, 3), str.substring(_ticker, 3)]
+
+////////////////////
+// Inputs
+////////////////////
+i_reso_autovalue        = not timeframe.isintraday ? '12M' : timeframe.multiplier >= 60 ? 'W' : timeframe.multiplier >= 240 ? 'M' : 'D'
+i_reso_mode             = input.string(t_reso_auto, 'Mode', options=[t_reso_auto, t_reso_customize, t_reso_lookback], group=GP1)
+i_reso_value            = input.timeframe('D', 'Resolution', group=GP1, tooltip='When you choose the "Resolution" on the mode.')
+i_reso_lookback         = i_reso_mode == t_reso_lookback ? input.int(100, 'Lookback periods', minval=1, group=GP1, tooltip='When you choose the "Lookback periods" on the mode.') : 1
+i_broker                = input.string('OANDA', 'Brokers', options=['OANDA', 'FOREXCOM', 'SAXO', 'FX_IDC', 'FX'], group=GP1)
+i_calclate              = input.string(t_calc_every, 'Calculated on', options=[t_calc_after, t_calc_every], group=GP1)
+
+v_reso                  = f_reso(i_reso_mode, i_reso_autovalue, i_reso_value)
+should_be_calclated     = i_calclate == t_calc_after ? barstate.isconfirmed : true
+
+////////////////////
+// Display
+////////////////////
+i_histogram             = input.string(t_histogram_option1, 'Chart ', options=[t_histogram_option1, t_histogram_option2, t_histogram_option3, option_hide], inline='chart_display', group=GP2)
+i_show_chart            = i_histogram != option_hide
+i_theme                 = str.lower(input.string(t_theme_option1, ' 🎨', options=[t_theme_option1, t_theme_option2, t_theme_option3, t_theme_option4, t_theme_option5], inline='chart_display', group=GP2))
+i_auto_selected_pair    = input.string('No', 'Select only the currencies of the chart.', options=['Yes', 'No'], inline='10', group=GP2) == 'Yes'
+i_histogram_only        = i_histogram == t_histogram_option3
+
+i_show_lines            = i_show_chart ? (not i_histogram_only) : false
+i_show_fill             = i_show_chart ? (i_show_lines and i_auto_selected_pair) : false
+i_show_hist             = i_show_chart ? (i_histogram != t_histogram_option1) : false
+
+i_show_EUR              = input.bool(true, 'EUR', group=GP2, inline='eur')
+c_eur                   = input.color(color.red, '', group=GP2, inline='eur')
+i_eur_thin              = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='eur')
+i_show_USD              = input.bool(true, 'USD', group=GP2, inline='usd')
+c_usd                   = input.color(color.orange, '', group=GP2, inline='usd')
+i_usd_thin              = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='usd')
+i_show_JPY              = input.bool(true, 'JPY', group=GP2, inline='jpy')
+c_jpy                   = input.color(color.aqua, '', group=GP2, inline='jpy')
+i_jpy_thin              = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='jpy')
+i_show_GBP              = input.bool(true, 'GBP', group=GP2, inline='gbp')
+c_gbp                   = input.color(color.green, '', group=GP2, inline='gbp')
+i_gbp_thin              = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='gbp')
+i_show_CHF              = input.bool(true, 'CHF', group=GP2, inline='chf')
+c_chf                   = input.color(color.maroon, '', group=GP2, inline='chf')
+i_chf_thin              = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='chf')
+i_show_AUD              = input.bool(true, 'AUD', group=GP2, inline='aud')
+c_aud                   = input.color(color.blue, '', group=GP2, inline='aud')
+i_aud_thin              = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='aud')
+i_show_CAD              = input.bool(true, 'CAD', group=GP2, inline='cad')
+c_cad                   = input.color(color.purple, '', group=GP2, inline='cad')
+i_cad_thin              = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='cad')
+i_show_NZD              = input.bool(true, 'NZD', group=GP2, inline='nzd')
+c_nzd                   = input.color(color.fuchsia, '', group=GP2, inline='nzd')
+i_nzd_thin              = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='nzd')
+i_show_OP1              = input.bool(false, '', group=GP2, inline='op1')
+i_op1_name              = input.string('XAU', '', group=GP2, inline='op1')
+i_OP1                   = input.symbol('XAUUSD', '', group=GP2, inline='op1')
+c_op1                   = input.color(color_gold, '', group=GP2, inline='op1')
+i_op1_thin              = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='op1')
+i_show_OP2              = input.bool(false, '', group=GP2, inline='op2')
+i_op2_name              = input.string('XAG', '', group=GP2, inline='op2')
+i_OP2                   = input.symbol('XAGUSD', '', group=GP2, inline='op2')
+c_op2                   = input.color(color_silver, '', group=GP2, inline='op2')
+i_op2_thin              = input.int(2, '', options=[1,2,3,4,5,6,7,8,9,10], group=GP2, inline='op2')
+
+i_should_be_text_black  = (i_theme == 'monokai' or i_theme == 'monokai pro' or i_theme == 'panda')
+
+if i_auto_selected_pair
+    i_show_EUR := f_matched_name_by_ticker('EUR'), i_show_USD := f_matched_name_by_ticker('USD'), i_show_JPY := f_matched_name_by_ticker('JPY')
+    i_show_GBP := f_matched_name_by_ticker('GBP'), i_show_CHF := f_matched_name_by_ticker('CHF'), i_show_AUD := f_matched_name_by_ticker('AUD')
+    i_show_CAD := f_matched_name_by_ticker('CAD'), i_show_NZD := f_matched_name_by_ticker('NZD')
+    i_show_OP1 := false, i_show_OP2 := false
+
+// Labels
+i_label_size            = input.string(size.normal, 'Name labels', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge, option_hide], group=GP2)
+i_label_shows           = i_label_size != option_hide
+i_label_line_style      = line.style_dotted
+i_label_offset          = 5
+i_label_style           = label.style_label_left
+
+x1_label                = bar_index + i_label_offset
+x1_line                 = bar_index
+x2_line                 = x1_label
+
+////////////////////
+// Source
+////////////////////
+i_source                = input.string('close', 'Source', options=['open', 'close', 'hlc3', 'ohlc4', 'RSI', 'CCI', 'Stochastics'], group=GP5)
+i_length                = input.int(7, 'Length', group=GP5, tooltip='When using RSI or CCI or Stochastic.')
+i_smoothtype            = input.string('SMA', 'Smoothing by', options=['ALMA', 'AMA', 'DEMA', 'EMA', 'HMA', 'KAMA', 'LSMA', 'MAV', 'RMA', 'SMA', 'SWMA', 'TEMA', 'TMA', 'VWMA', 'WMA', 'ZLEMA'], inline='smooth', group=GP5)
+i_smooth                = input.int(1, '', minval=1, inline='smooth', group=GP5)
+v_source                = f_get_source(i_source, i_length, 3)
+
+////////////////////
+// Other settings
+////////////////////
+// Currency strength 
+i_panel_show            = input.bool(true, 'Currency strength panel', group=GP4)
+i_panel_y               = input.string('top', 'Position', options = ['top', 'middle', 'bottom'], inline='11', group=GP4)
+i_panel_x               = input.string('right', '', options=['left', 'center', 'right'], inline='11', group=GP4)
+i_panel_position        = i_panel_y + '_' + i_panel_x
+i_panel_theme           = 'multi'
+i_panel_flag_size       = input.string(size.large, 'Flag', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP4)
+i_panel_text_size       = input.string(size.normal, 'Text', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP4)
+
+// Currency pair strength
+i_pair_show             = input.bool(false, 'Currency pair strength panel', group=GP9)
+i_pair_item1            = input.string('EURUSD', '', inline='pair_list', group=GP9)
+i_pair_item2            = input.string('USDJPY', '', inline='pair_list', group=GP9)
+i_pair_item3            = input.string('USDCHF', '', inline='pair_list', group=GP9)
+i_pair_item4            = input.string('GBPUSD', '', inline='pair_list', group=GP9)
+i_pair_item5            = input.string('AUDUSD', '', inline='pair_list', group=GP9)
+i_pair_item6            = input.string('USDCAD', '', inline='pair_list', group=GP9)
+i_pair_item7            = input.string('EURGBP', '', inline='pair_list', group=GP9)
+i_pair_item8            = input.string('NZDUSD', '', inline='pair_list', group=GP9)
+i_pair_items            = array.new<string>()
+i_pair_y                = input.string('bottom', 'Position', options = ['top', 'middle', 'bottom'], inline='pair_position', group=GP9)
+i_pair_x                = input.string('right', '', options=['left', 'center', 'right'], inline='pair_position', group=GP9)
+i_pair_position         = i_pair_y + '_' + i_pair_x
+i_pair_text_size        = input.string(size.normal, 'Text', options=[size.auto, size.tiny, size.small, size.normal, size.large, size.huge], group=GP9)
+option_pairtxtcolor1    = '☽ Dark'
+option_pairtxtcolor2    = '☀ Light'
+i_pair_color            = input.string(option_pairtxtcolor2, 'Text color', options=[option_pairtxtcolor1, option_pairtxtcolor2], group=GP9)
+
+// Options
+i_levels_show           = input.bool(false, 'Level lines', inline='level_line', group=GP6)
+i_levels                = input.int(10, '', minval=1, inline='level_line', group=GP6)
+c_levels                = color.gray
+i_show_barcolor         = input.bool(false, 'Bar Colors', group=GP6)
+
+// Color themes
+c_green = f_color(i_theme, ac.monokai('green'), ac.monokaipro('green'), ac.panda('green'), ac.tradingview_flag('green'), ac.tradingview('green'))
+c_red   = f_color(i_theme, ac.monokai('pink'),  ac.monokaipro('pink'),  ac.panda('red'),   ac.tradingview_flag('red'),   ac.tradingview('red'))
+c_black = f_color(i_theme, ac.monokai('black'), ac.monokaipro('black'), ac.panda('very-dark-gray'), ac.tradingview('black'), ac.tradingview('black'))
+
+c_eur  := f_color(i_theme, ac.monokai('pink'), ac.monokaipro('pink'), ac.panda('red'), ac.tradingview_flag('red'), c_eur)
+c_usd  := f_color(i_theme, ac.monokai('orange'),ac.monokaipro('orange'), ac.panda('orange'), ac.tradingview_flag('orange'), c_usd)
+c_jpy  := f_color(i_theme, c_jpy, c_jpy, ac.panda('pink'), ac.tradingview_flag('cyan'), c_jpy)
+c_gbp  := f_color(i_theme, ac.monokai('green'), ac.monokaipro('green'), ac.panda('green'), ac.tradingview_flag('green'), c_gbp)
+c_cad  := f_color(i_theme, ac.monokai('purple'), ac.monokaipro('purple'), ac.panda('purple'), ac.tradingview_flag('purple'), c_cad)
+c_aud  := f_color(i_theme, ac.monokai('blue'), ac.monokaipro('blue'), ac.panda('blue'), ac.tradingview_flag('blue'), c_aud)
+
+
+////////////////////
+// Functions
+////////////////////
+get_value_by_name (_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
+    _v == 'EUR' ? _EUR : _v == 'USD' ? _USD : _v == 'JPY' ? _JPY : _v == 'CHF' ? _CHF : _v == 'GBP' ? _GBP : _v == 'AUD' ? _AUD : _v == 'CAD' ? _CAD : _v == 'NZD' ? _NZD : na
+
+get_name_by_value(_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
+    _v == _EUR ? 'EUR' : _v == _USD ? 'USD' : _v == _JPY ? 'JPY' : _v == _CHF ? 'CHF' : _v == _GBP ? 'GBP' : _v == _AUD ? 'AUD' : _v == _CAD ? 'CAD' : _v == _NZD ? 'NZD' : na
+
+get_flag_by_value(_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
+    _v == _EUR ? EUR_FLAG : _v == _USD ? USD_FLAG : _v == _JPY ? JPY_FLAG : _v == _CHF ? CHF_FLAG : _v == _GBP ? GBP_FLAG : _v == _AUD ? AUD_FLAG : _v == _CAD ? CAD_FLAG : _v == _NZD ? NZD_FLAG : na
+
+get_pair_by_value (_v, _EURUSD, _USDJPY, _USDCHF, _GBPUSD, _AUDUSD , _USDCAD, _NZDUSD) =>
+    _v == _EURUSD ? 'EUR\nUSD' : _v == _USDJPY ? 'USD\nJPY' : _v == _USDCHF ? 'USD\nCHF' : _v == _GBPUSD ? 'GBP\nUSD' : _v == _AUDUSD ? 'AUD\nUSD' : _v == _USDCAD ? 'USD\nCAD' : _v == _NZDUSD ? 'NZD\nUSD' : na
+
+get_color_by_value(_v, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
+    _v == _EUR ? c_eur : _v == _USD ? c_usd : _v == _JPY ? c_jpy : _v == _CHF ? c_chf : _v == _GBP ? c_gbp : _v == _AUD ? c_aud : _v == _CAD ? c_cad : _v == _NZD ? c_nzd : na
+
+get_val(_v1, _v2) =>
+    float res = 0
+
+    if _v2 == 0
+        res := 0
+        res
+    else
+        res := math.log(_v1 / _v2) * 10000
+        res
+
+    res
+
+get_val_m(_v1, _v2, _v3, _v4) =>
+    float res = 0
+    float v1 = _v1 * _v3
+    float v2 = _v2 * _v4
+
+    if _v2 == 0
+        res := 0
+        res
+    else
+        res := math.log(v1 / v2) * 10000
+        res
+
+    res
+
+get_val_d(_v1, _v2, _v3, _v4) =>
+    float res = 0
+
+    if _v3 == 0 or _v4 == 0
+        res := 0
+        res
+    else
+        float v1 = _v1 / _v3
+        float v2 = _v2 / _v4
+
+        if v2 == 0
+            res := 0
+            res
+        else
+            res := math.log(v1 / v2) * 10000
+            res
+
+    res
+
+////////////////////
+// Render functions
+////////////////////
+f_render_label (_show, _x1, _x2, _v, _n, _color, _label_color, _line_style, _label_style, _thin) =>
+    var line myline = na, var label mylabel = na
+    
+    if barstate.islast and _show
+        x2 = _x1 + _x2
+        myline  := line.new(_x1, _v, x2, _v, xloc.bar_index, extend.none, _color, _line_style, _thin), line.delete(myline[1])
+        mylabel := label.new(x2, _v, _n, xloc.bar_index, yloc.price, _color, _label_style, _label_color, i_label_size, text.align_center, na), label.delete(mylabel[1])
+
+f_render_levels (_show_charts, _show_lavels, _y, _color) =>
+    var line line_base = na
+    var line line_upper = na
+    var line line_lower = na
+
+    if barstate.isfirst and _show_charts and _show_lavels
+        x1 = bar_index
+        x2 = bar_index + 10
+        line_base  := line.new(x1,   0, x2,   0, color=_color, style=line.style_solid , extend=extend.both), line.delete(line_base[1])
+        line_upper := line.new(x1,  _y, x2,  _y, color=_color, style=line.style_dotted, extend=extend.both), line.delete(line_upper[1])
+        line_lower := line.new(x1, -_y, x2, -_y, color=_color, style=line.style_dotted, extend=extend.both), line.delete(line_lower[1])
+
+f_render_pair_panel (_show, _position, _colorscheme, _names, _values) =>
+    if _show
+        var table mypanel = table.new(_position, 2, 8), table.clear(mypanel, 0, 0, 1,  7)
+        c_ticker = _colorscheme == option_pairtxtcolor1 ? ac.tradingview('lightgray') : ac.panda('darkgray')
+        c_pair_bull = ac.tradingview('green')
+        c_pair_bear = ac.tradingview('red')
+        c_pair_newt = ac.tradingview('gray')
+        i_pair_strength = 0
+        
+        for i = 0 to array.size(_values) - 1
+            v_value = array.get(_values, i)
+            v_label = array.get(_names, i)
+            v_color = v_value >= 0 ? c_pair_bull : c_pair_bear
+            v_color := math.abs(v_value) < i_pair_strength ? c_pair_newt : v_color
+            
+            if not na(v_value) and not na(v_label)
+                table.cell(mypanel, 0, i, str.replace(v_label, '\n', ''), text_halign=text.align_left, text_color=c_ticker, text_size=i_pair_text_size)
+                table.cell(mypanel, 1, i, str.format('{0,number,#.##}',v_value), text_halign=text.align_right, text_color=v_color, text_size=i_pair_text_size)
+
+f_render_panel (_show, _position, _color, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD) =>
+    v_values = array.new_float(8)
+    v_sorted = array.new_string(8)
+
+    if barstate.islast 
+        v_values := array.from(_EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD)
+        array.sort(v_values, order.descending)
+    
+        var table mypanel = table.new(_position, 4, 8, color_none, color_none, 0, color_none, 0)
+        table.clear(mypanel, 1, 0, 3, 7)
+    
+        for i = 0 to array.size(v_values) - 1 by 1
+            v_value = array.get(v_values, i)
+            n = get_name_by_value(v_value , _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD)
+            f = get_flag_by_value(v_value , _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD)
+            c = get_color_by_value(v_value, _EUR, _USD, _JPY, _CHF, _GBP, _AUD, _CAD, _NZD)
+            v = str.format('{0, number, #.#}', v_value)
+            r = str.tostring(i + 1)
+        
+            if not na(n)
+                array.set(v_sorted, i, n)
+        
+            if _show
+                head_bgcolor = c
+                bgcolor      = c
+                table.cell(mypanel, 0, i, r, bgcolor=head_bgcolor, text_color=_color, text_size=i_panel_text_size)
+                table.cell(mypanel, 1, i, f, bgcolor=bgcolor, text_color=_color, text_size=i_panel_flag_size)
+                table.cell(mypanel, 2, i, n, bgcolor=bgcolor, text_color=_color, text_size=i_panel_text_size, text_halign=text.align_left)
+                table.cell(mypanel, 3, i, v, bgcolor=bgcolor, text_color=_color, text_size=i_panel_text_size, text_halign=text.align_right)
+
+    [v_values, v_sorted]
+
+
+////////////////////
+// Calculating
+////////////////////
+var float v1_EURUSD = na, var float v2_EURUSD = na
+var float v1_USDJPY = na, var float v2_USDJPY = na
+var float v1_USDCHF = na, var float v2_USDCHF = na
+var float v1_GBPUSD = na, var float v2_GBPUSD = na
+var float v1_AUDUSD = na, var float v2_AUDUSD = na
+var float v1_USDCAD = na, var float v2_USDCAD = na
+var float v1_NZDUSD = na, var float v2_NZDUSD = na
+var float v1_OP1USD = na, var float v2_OP1USD = na
+var float v1_OP2USD = na, var float v2_OP2USD = na
+
+v1_EURUSD := should_be_calclated ? request.security(i_broker + ':EURUSD', timeframe.period, v_source) : v1_EURUSD[1]
+v1_USDJPY := should_be_calclated ? request.security(i_broker + ':USDJPY', timeframe.period, v_source) : v1_USDJPY[1]
+v1_USDCHF := should_be_calclated ? request.security(i_broker + ':USDCHF', timeframe.period, v_source) : v1_USDCHF[1]
+v1_GBPUSD := should_be_calclated ? request.security(i_broker + ':GBPUSD', timeframe.period, v_source) : v1_GBPUSD[1]
+v1_AUDUSD := should_be_calclated ? request.security(i_broker + ':AUDUSD', timeframe.period, v_source) : v1_AUDUSD[1]
+v1_USDCAD := should_be_calclated ? request.security(i_broker + ':USDCAD', timeframe.period, v_source) : v1_USDCAD[1]
+v1_NZDUSD := should_be_calclated ? request.security(i_broker + ':NZDUSD', timeframe.period, v_source) : v1_NZDUSD[1]
+v1_OP1USD := should_be_calclated and i_show_OP1 ? request.security(i_OP1, timeframe.period, v_source) : v1_OP1USD[1]
+v1_OP2USD := should_be_calclated and i_show_OP2 ? request.security(i_OP2, timeframe.period, v_source) : v2_OP2USD[1]
+
+v2_EURUSD := should_be_calclated ? request.security(i_broker + ':EURUSD', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_EURUSD[1]
+v2_USDJPY := should_be_calclated ? request.security(i_broker + ':USDJPY', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_USDJPY[1]
+v2_USDCHF := should_be_calclated ? request.security(i_broker + ':USDCHF', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_USDCHF[1]
+v2_GBPUSD := should_be_calclated ? request.security(i_broker + ':GBPUSD', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_GBPUSD[1]
+v2_AUDUSD := should_be_calclated ? request.security(i_broker + ':AUDUSD', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_AUDUSD[1]
+v2_USDCAD := should_be_calclated ? request.security(i_broker + ':USDCAD', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_USDCAD[1]
+v2_NZDUSD := should_be_calclated ? request.security(i_broker + ':NZDUSD', v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_NZDUSD[1]
+v2_OP1USD := should_be_calclated and i_show_OP1 ? request.security(i_OP1, v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_OP1USD[1]
+v2_OP2USD := should_be_calclated and i_show_OP2 ? request.security(i_OP2, v_reso, v_source[i_reso_lookback], barmerge.gaps_off, barmerge.lookahead_on) : v2_OP2USD[1]
+
+var float EURUSD = na
+var float USDJPY = na
+var float USDCHF = na
+var float GBPUSD = na
+var float AUDUSD = na
+var float USDCAD = na
+var float NZDUSD = na
+var float EURJPY = na
+var float EURCHF = na
+var float EURGBP = na
+var float EURCAD = na
+var float EURAUD = na
+var float EURNZD = na
+var float EUROP1 = na
+var float EUROP2 = na
+var float GBPCHF = na
+var float GBPJPY = na
+var float GBPCAD = na
+var float GBPAUD = na
+var float GBPNZD = na
+var float AUDCHF = na
+var float AUDJPY = na
+var float AUDCAD = na
+var float AUDNZD = na
+var float NZDCAD = na
+var float NZDCHF = na
+var float NZDJPY = na
+var float CADJPY = na
+var float CADCHF = na
+var float CHFJPY = na
+var float OP1USD = na
+var float OP1JPY = na
+var float OP1CHF = na
+var float OP1GBP = na
+var float OP1CAD = na
+var float OP1AUD = na
+var float OP1NZD = na
+var float OP2USD = na
+var float OP2JPY = na
+var float OP2CHF = na
+var float OP2GBP = na
+var float OP2CAD = na
+var float OP2AUD = na
+var float OP2NZD = na
+
+EURUSD := should_be_calclated ? get_val(v1_EURUSD,   v2_EURUSD)                       : EURUSD[1]
+USDJPY := should_be_calclated ? get_val(v1_USDJPY,   v2_USDJPY)                       : USDJPY[1]
+USDCHF := should_be_calclated ? get_val(v1_USDCHF,   v2_USDCHF)                       : USDCHF[1]
+GBPUSD := should_be_calclated ? get_val(v1_GBPUSD,   v2_GBPUSD)                       : GBPUSD[1]
+AUDUSD := should_be_calclated ? get_val(v1_AUDUSD,   v2_AUDUSD)                       : AUDUSD[1]
+USDCAD := should_be_calclated ? get_val(v1_USDCAD,   v2_USDCAD)                       : USDCAD[1]
+NZDUSD := should_be_calclated ? get_val(v1_NZDUSD,   v2_NZDUSD)                       : NZDUSD[1]
+OP1USD := should_be_calclated ? get_val(v1_OP1USD,   v2_OP1USD)                       : OP1USD[1]
+OP2USD := should_be_calclated ? get_val(v1_OP2USD,   v2_OP2USD)                       : OP2USD[1]
+EURJPY := should_be_calclated ? get_val_m(v1_EURUSD, v2_EURUSD, v1_USDJPY, v2_USDJPY) : EURJPY[1]
+EURCHF := should_be_calclated ? get_val_m(v1_EURUSD, v2_EURUSD, v1_USDCHF, v2_USDCHF) : EURCHF[1]
+EURGBP := should_be_calclated ? get_val_d(v1_EURUSD, v2_EURUSD, v1_GBPUSD, v2_GBPUSD) : EURGBP[1]
+EURCAD := should_be_calclated ? get_val_m(v1_EURUSD, v2_EURUSD, v1_USDCAD, v2_USDCAD) : EURCAD[1]
+EURAUD := should_be_calclated ? get_val_d(v1_EURUSD, v2_EURUSD, v1_AUDUSD, v2_AUDUSD) : EURAUD[1]
+EURNZD := should_be_calclated ? get_val_d(v1_EURUSD, v2_EURUSD, v1_NZDUSD, v2_NZDUSD) : EURNZD[1]
+EUROP1 := should_be_calclated ? get_val_d(v1_EURUSD, v2_EURUSD, v1_OP1USD, v2_OP1USD) : EUROP1[1]
+EUROP2 := should_be_calclated ? get_val_d(v1_EURUSD, v2_EURUSD, v1_OP2USD, v2_OP2USD) : EUROP2[1]
+GBPCHF := should_be_calclated ? get_val_m(v1_GBPUSD, v2_GBPUSD, v1_USDCHF, v2_USDCHF) : GBPCHF[1]
+GBPJPY := should_be_calclated ? get_val_m(v1_GBPUSD, v2_GBPUSD, v1_USDJPY, v2_USDJPY) : GBPJPY[1]
+GBPCAD := should_be_calclated ? get_val_m(v1_GBPUSD, v2_GBPUSD, v1_USDCAD, v2_USDCAD) : GBPCAD[1]
+GBPAUD := should_be_calclated ? get_val_d(v1_GBPUSD, v2_GBPUSD, v1_AUDUSD, v2_AUDUSD) : GBPAUD[1]
+GBPNZD := should_be_calclated ? get_val_d(v1_GBPUSD, v2_GBPUSD, v1_NZDUSD, v2_NZDUSD) : GBPNZD[1]
+AUDCHF := should_be_calclated ? get_val_m(v1_AUDUSD, v2_AUDUSD, v1_USDCHF, v2_USDCHF) : AUDCHF[1]
+AUDJPY := should_be_calclated ? get_val_m(v1_AUDUSD, v2_AUDUSD, v1_USDJPY, v2_USDJPY) : AUDJPY[1]
+AUDCAD := should_be_calclated ? get_val_m(v1_AUDUSD, v2_AUDUSD, v1_USDCAD, v2_USDCAD) : AUDCAD[1]
+AUDNZD := should_be_calclated ? get_val_d(v1_AUDUSD, v2_AUDUSD, v1_NZDUSD, v2_NZDUSD) : AUDNZD[1]
+NZDCAD := should_be_calclated ? get_val_m(v1_NZDUSD, v2_NZDUSD, v1_USDCAD, v2_USDCAD) : NZDCAD[1]
+NZDCHF := should_be_calclated ? get_val_m(v1_NZDUSD, v2_NZDUSD, v1_USDCHF, v2_USDCHF) : NZDCHF[1]
+NZDJPY := should_be_calclated ? get_val_m(v1_NZDUSD, v2_NZDUSD, v1_USDJPY, v2_USDJPY) : NZDJPY[1]
+CADJPY := should_be_calclated ? get_val_d(v1_USDJPY, v2_USDJPY, v1_USDCAD, v2_USDCAD) : CADJPY[1]
+CADCHF := should_be_calclated ? get_val_d(v1_USDCHF, v2_USDCHF, v1_USDCAD, v2_USDCAD) : CADCHF[1]
+CHFJPY := should_be_calclated ? get_val_d(v1_USDJPY, v2_USDJPY, v1_USDCHF, v2_USDCHF) : CHFJPY[1]
+OP1JPY := should_be_calclated ? get_val_m(v1_OP1USD, v2_OP1USD, v1_USDJPY, v2_USDJPY) : OP1JPY[1]
+OP1CHF := should_be_calclated ? get_val_m(v1_OP1USD, v2_OP1USD, v1_USDCHF, v2_USDCHF) : OP1CHF[1]
+OP1GBP := should_be_calclated ? get_val_d(v1_OP1USD, v2_OP1USD, v1_GBPUSD, v2_GBPUSD) : OP1GBP[1]
+OP1CAD := should_be_calclated ? get_val_m(v1_OP1USD, v2_OP1USD, v1_USDCAD, v2_USDCAD) : OP1CAD[1]
+OP1AUD := should_be_calclated ? get_val_d(v1_OP1USD, v2_OP1USD, v1_AUDUSD, v2_AUDUSD) : OP1AUD[1]
+OP1NZD := should_be_calclated ? get_val_d(v1_OP1USD, v2_OP1USD, v1_NZDUSD, v2_NZDUSD) : OP1NZD[1]
+OP2JPY := should_be_calclated ? get_val_m(v1_OP2USD, v2_OP2USD, v1_USDJPY, v2_USDJPY) : OP2JPY[1]
+OP2CHF := should_be_calclated ? get_val_m(v1_OP2USD, v2_OP2USD, v1_USDCHF, v2_USDCHF) : OP2CHF[1]
+OP2GBP := should_be_calclated ? get_val_d(v1_OP2USD, v2_OP2USD, v1_GBPUSD, v2_GBPUSD) : OP2GBP[1]
+OP2CAD := should_be_calclated ? get_val_m(v1_OP2USD, v2_OP2USD, v1_USDCAD, v2_USDCAD) : OP2CAD[1]
+OP2AUD := should_be_calclated ? get_val_d(v1_OP2USD, v2_OP2USD, v1_AUDUSD, v2_AUDUSD) : OP2AUD[1]
+OP2NZD := should_be_calclated ? get_val_d(v1_OP2USD, v2_OP2USD, v1_NZDUSD, v2_NZDUSD) : OP2NZD[1]
+
+EUR     = ma.calc(i_smoothtype, ( EURUSD + EURJPY + EURCHF + EURGBP + EURAUD + EURCAD + EURNZD) / 7, i_smooth)
+USD     = ma.calc(i_smoothtype, (-EURUSD + USDJPY + USDCHF - GBPUSD - AUDUSD + USDCAD - NZDUSD) / 7, i_smooth)
+JPY     = ma.calc(i_smoothtype, (-EURJPY - USDJPY - CHFJPY - GBPJPY - AUDJPY - CADJPY - NZDJPY) / 7, i_smooth)
+CHF     = ma.calc(i_smoothtype, (-EURCHF - USDCHF + CHFJPY - GBPCHF - AUDCHF - CADCHF - NZDCHF) / 7, i_smooth)
+GBP     = ma.calc(i_smoothtype, (-EURGBP + GBPUSD + GBPCHF + GBPJPY + GBPAUD + GBPCAD + GBPNZD) / 7, i_smooth)
+AUD     = ma.calc(i_smoothtype, (-EURAUD + AUDUSD + AUDJPY + AUDCHF - GBPAUD + AUDCAD + AUDNZD) / 7, i_smooth)
+CAD     = ma.calc(i_smoothtype, (-EURCAD - USDCAD + CADJPY + CADCHF - GBPCAD - AUDCAD - NZDCAD) / 7, i_smooth)
+NZD     = ma.calc(i_smoothtype, (-EURNZD + NZDUSD + NZDJPY + NZDCHF - GBPNZD + NZDCAD - AUDNZD) / 7, i_smooth)
+OP1     = ma.calc(i_smoothtype, (-EUROP1 + OP1USD + OP1JPY + OP1CHF + OP1GBP + OP1AUD + OP1CAD + OP1NZD) / 8, i_smooth)
+OP2     = ma.calc(i_smoothtype, (-EUROP2 + OP2USD + OP2JPY + OP2CHF + OP2GBP + OP2AUD + OP2CAD + OP2NZD) / 8, i_smooth)
+
+
+// Delta
+//========
+[currency_a, currency_b]    = f_get_currency_by_ticker(syminfo.ticker)
+currency_a_value            = get_value_by_name(currency_a, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+currency_b_value            = get_value_by_name(currency_b, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+currency_delta              = currency_a_value - currency_b_value
+chg_delta                   = ta.change(currency_delta)
+
+c_currency_a                = get_value_by_name(currency_a, c_eur, c_usd, c_jpy, c_chf, c_gbp, c_aud, c_cad, c_nzd)
+c_currency_b                = get_value_by_name(currency_b, c_eur, c_usd, c_jpy, c_chf, c_gbp, c_aud, c_cad, c_nzd)
+c_delta                     = currency_delta > 0 ? c_currency_a : c_currency_b
+c_delta_transp              = 40
+
+
+////////////////////
+// Plotting
+////////////////////
+barcolor(i_show_barcolor ? math.abs(currency_delta) >= i_levels ? c_delta : color.from_gradient(50, 0, 100, c_delta, c_black) : na)
+
+// Histogram
+plot(i_show_hist ? currency_delta : na, color=color.new(c_delta, c_delta_transp), style=plot.style_columns, editable=false)
+
+// Lines
+plot(i_show_OP2 and i_show_lines ? OP2 : na, 'OP2', color=c_op2, linewidth=i_op2_thin, editable=false)
+plot(i_show_OP1 and i_show_lines ? OP1 : na, 'OP1', color=c_op1, linewidth=i_op1_thin, editable=false)
+plot(i_show_NZD and i_show_lines ? NZD : na, 'NZD', color=c_nzd, linewidth=i_nzd_thin, editable=false)
+plot(i_show_CAD and i_show_lines ? CAD : na, 'CAD', color=c_cad, linewidth=i_cad_thin, editable=false)
+plot(i_show_CHF and i_show_lines ? CHF : na, 'CHF', color=c_chf, linewidth=i_chf_thin, editable=false)
+plot(i_show_AUD and i_show_lines ? AUD : na, 'AUD', color=c_aud, linewidth=i_aud_thin, editable=false)
+plot(i_show_GBP and i_show_lines ? GBP : na, 'GBP', color=c_gbp, linewidth=i_gbp_thin, editable=false)
+plot(i_show_JPY and i_show_lines ? JPY : na, 'JPY', color=c_jpy, linewidth=i_jpy_thin, editable=false)
+plot(i_show_EUR and i_show_lines ? EUR : na, 'EUR', color=c_eur, linewidth=i_eur_thin, editable=false)
+plot(i_show_USD and i_show_lines ? USD : na, 'USD', color=c_usd, linewidth=i_usd_thin, editable=false)
+plot(i_show_fill ? currency_a_value : na, 'A fill', color=color.new(c_currency_a, 94), linewidth=0, style=plot.style_area, editable=false)
+plot(i_show_fill ? currency_b_value : na, 'B fill', color=color.new(c_currency_b, 94), linewidth=0, style=plot.style_area, editable=false)
+
+// Lines & Labels
+c_label = i_should_be_text_black ? c_black : color.white
+
+f_render_label((i_label_shows and i_show_lines) and i_show_OP2, bar_index, i_label_offset, OP2, i_op2_name, c_op2, c_label, i_label_line_style, i_label_style, i_op2_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_OP1, bar_index, i_label_offset, OP1, i_op1_name, c_op1, c_label, i_label_line_style, i_label_style, i_op1_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_NZD, bar_index, i_label_offset, NZD, 'NZD', c_nzd, c_label, i_label_line_style, i_label_style, i_nzd_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_CAD, bar_index, i_label_offset, CAD, 'CAD', c_cad, c_label, i_label_line_style, i_label_style, i_cad_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_CHF, bar_index, i_label_offset, CHF, 'CHF', c_chf, c_label, i_label_line_style, i_label_style, i_chf_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_AUD, bar_index, i_label_offset, AUD, 'AUD', c_aud, c_label, i_label_line_style, i_label_style, i_aud_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_GBP, bar_index, i_label_offset, GBP, 'GBP', c_gbp, c_label, i_label_line_style, i_label_style, i_gbp_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_JPY, bar_index, i_label_offset, JPY, 'JPY', c_jpy, c_label, i_label_line_style, i_label_style, i_jpy_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_EUR, bar_index, i_label_offset, EUR, 'EUR', c_eur, c_label, i_label_line_style, i_label_style, i_eur_thin)
+f_render_label((i_label_shows and i_show_lines) and i_show_USD, bar_index, i_label_offset, USD, 'USD', c_usd, c_label, i_label_line_style, i_label_style, i_usd_thin)
+f_render_levels(i_show_lines, i_levels_show, i_levels, c_levels)
+
+////////////////////
+// Tables
+////////////////////
+// Currency pair strength
+pair_items = array.new<float>()
+
+if barstate.islast
+    array.push(i_pair_items, i_pair_item1)
+    array.push(i_pair_items, i_pair_item2)
+    array.push(i_pair_items, i_pair_item3)
+    array.push(i_pair_items, i_pair_item4)
+    array.push(i_pair_items, i_pair_item5)
+    array.push(i_pair_items, i_pair_item6)
+    array.push(i_pair_items, i_pair_item7)
+    array.push(i_pair_items, i_pair_item8)
+
+    if array.size(i_pair_items) > 0
+        for i = 0 to array.size(i_pair_items) - 1
+            my_value = array.get(i_pair_items, i)
+
+            if not na(my_value) and str.length(my_value) == 6
+                [pair_a, pair_b] = f_get_currency_by_ticker(array.get(i_pair_items, i))
+                val1 = get_value_by_name(pair_a, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+                val2 = get_value_by_name(pair_b, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+
+                if not na(val1) and not na(val2)
+                    array.push(pair_items, val1 - val2)
+                else
+                    array.push(pair_items, na)
+            else
+                array.push(pair_items, na)
+                array.set(i_pair_items, i , na)
+
+    f_render_pair_panel(i_pair_show, i_pair_position, i_pair_color, i_pair_items, pair_items)
+
+// Currency strength chart
+[values, sorted_by_ranking_names] = f_render_panel(i_panel_show, i_panel_position, c_black, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+
+
+////////////////////
+// Signals
+////////////////////
+//[bar_open, bar_close] = request.security(ticker.heikinashi(syminfo.tickerid), timeframe.period, [open, close])
+//
+//var bar = 0
+//bar := bar_close > bar_open ? 1 : bar_close < bar_open ? -1 : bar[1]
+//bar_height = math.abs(bar_close - bar_open)
+//bar_stoch = ta.stoch(bar_height, bar_height, bar_height, 7)
+//bar_rsi = ta.rsi(close, 14)
+//
+//
+//i_show_label = input.bool(true, 'Labels', group=GP6)
+//i_alert_offset = 0
+//
+//cond_buy  = bar != bar[1] and bar ==  1 and high > high[1] and bar_stoch < 20 and currency_delta >=  i_levels
+//cond_sell = bar != bar[1] and bar == -1 and low  < low[1]  and bar_stoch < 20 and currency_delta <= -i_levels
+//
+//plotshape(i_show_label and cond_buy , color=c_delta,  text='', textcolor=color.white, style=shape.labelup, location=location.belowbar, size=size.small, offset=i_alert_offset)
+//plotshape(i_show_label and cond_sell, color=c_delta, text='', textcolor=color.white, style=shape.labeldown, location=location.abovebar, size=size.small, offset=i_alert_offset)
+
+////////////////////
+// Alerts
+////////////////////
+var string the_strongest_name = na
+var string the_weakest_name = na
+
+if barstate.islast and barstate.isrealtime
+    float max_value = array.max(values)
+    float min_value = array.min(values)
+    the_strongest_name := get_name_by_value(max_value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+    the_weakest_name := get_name_by_value(min_value, EUR, USD, JPY, CHF, GBP, AUD, CAD, NZD)
+    bool strongest_value_changed = the_strongest_name != the_strongest_name[1]
+    bool weakest_value_changed = the_weakest_name != the_weakest_name[1]
+    string alert_message = array.join(sorted_by_ranking_names, ' > ')
+    
+    if strongest_value_changed or weakest_value_changed
+        alert('NEW UPDATE: ' + alert_message, alert.freq_once_per_bar_close)
